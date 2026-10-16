@@ -1,0 +1,262 @@
+"""Generate the solution design diagram as one self-contained SVG with official Azure icons.
+
+Icons: Microsoft Azure Architecture Icons V24, embedded unmodified (Microsoft permits their use
+in architecture diagrams and documentation). Usage: python solution_design.py <icons-dir> <out.svg>
+"""
+
+import base64
+import html
+import sys
+from pathlib import Path
+
+ICONS_DIR = Path(sys.argv[1])
+OUT = Path(sys.argv[2])
+
+ICONS = {
+    "apim": "10042-icon-service-API-Management-Services.svg",
+    "eventgrid": "10206-icon-service-Event-Grid-Topics.svg",
+    "servicebus": "10836-icon-service-Azure-Service-Bus.svg",
+    "appinsights": "00012-icon-service-Application-Insights.svg",
+    "loganalytics": "00009-icon-service-Log-Analytics-Workspaces.svg",
+    "functions": "10029-icon-service-Function-Apps.svg",
+    "logicapps": "02631-icon-service-Logic-Apps.svg",
+    "storage": "10086-icon-service-Storage-Accounts.svg",
+    "identity": "10227-icon-service-Managed-Identities.svg",
+    "cost": "00004-icon-service-Cost-Management-and-Billing.svg",
+    "cosmos": "10121-icon-service-Azure-Cosmos-DB.svg",
+    "subscription": "10002-icon-service-Subscriptions.svg",
+    "eventhubs": "00039-icon-service-Event-Hubs.svg",
+    "search": "10044-icon-service-Cognitive-Search.svg",
+    "foundry": "035746832-icon-service-AI-Foundry.svg",
+    "resourcegroup": "10007-icon-service-Resource-Groups.svg",
+}
+
+
+def icon_data(key: str) -> str:
+    path = next(ICONS_DIR.rglob(ICONS[key]))
+    return "data:image/svg+xml;base64," + base64.b64encode(path.read_bytes()).decode()
+
+
+BLUE, INK, MUTED, LIVE, PLANNED, RED = "#0078D4", "#1B1B1F", "#5F6368", "#107C10", "#8A8886", "#A4262C"
+out: list[str] = []
+esc = html.escape
+
+
+def text(x, y, s, size=13, weight=400, color=INK, anchor="start", italic=False):
+    style = "font-style:italic;" if italic else ""
+    out.append(
+        f'<text x="{x}" y="{y}" font-size="{size}" font-weight="{weight}" fill="{color}" '
+        f'text-anchor="{anchor}" style="{style}">{esc(s)}</text>'
+    )
+
+
+def box(x, y, w, h, label=None, *, fill="#FFFFFF", stroke="#C8C6C4", dashed=False, radius=10,
+        label_color=MUTED, label_size=12, stroke_width=1.2, icon=None, badge=None, tag=None):
+    dash = ' stroke-dasharray="6 4"' if dashed else ""
+    out.append(
+        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{radius}" fill="{fill}" '
+        f'stroke="{stroke}" stroke-width="{stroke_width}"{dash}/>'
+    )
+    tx = x + 12
+    if icon:
+        out.append(f'<image href="{icon_data(icon)}" x="{x + 10}" y="{y + 8}" width="18" height="18"/>')
+        tx = x + 34
+    if label:
+        text(tx, y + 22, label, size=label_size, weight=600, color=label_color)
+    if badge:
+        status_badge(x + w - 12, y + 10, *badge)
+    if tag:
+        tag_chip(x + 12, y + h - 30, *tag)
+
+
+def tag_chip(x, y, label, color):
+    w = 12 + 6.2 * len(label)
+    out.append(f'<rect x="{x}" y="{y}" width="{w}" height="20" rx="4" fill="#FFFFFF" stroke="{color}"/>')
+    text(x + w / 2, y + 14, label, size=10.5, weight=600, color=color, anchor="middle")
+
+
+def status_badge(right_x, y, label, color):
+    w = 8 + 7 * len(label)
+    out.append(f'<rect x="{right_x - w}" y="{y}" width="{w}" height="18" rx="9" fill="{color}"/>')
+    text(right_x - w / 2, y + 13, label, size=10, weight=700, color="#FFFFFF", anchor="middle")
+
+
+def service(x, y, key, title, lines=(), *, dashed=False, w=200):
+    """An Azure service: icon, name, detail lines."""
+    box(x, y, w, 58 + 15 * len(lines), fill="#FFFFFF", stroke=PLANNED if dashed else "#C8C6C4",
+        dashed=dashed, radius=8)
+    out.append(f'<image href="{icon_data(key)}" x="{x + 10}" y="{y + 10}" width="38" height="38"/>')
+    text(x + 56, y + 26, title, size=13, weight=600)
+    for i, line in enumerate(lines):
+        text(x + 56, y + 43 + 15 * i, line, size=11, color=MUTED)
+
+
+def chip(x, y, label, *, dashed=False, w=None):
+    w = w or 14 + 6.6 * len(label)
+    dash = ' stroke-dasharray="4 3"' if dashed else ""
+    stroke = PLANNED if dashed else "#8A8886"
+    out.append(f'<rect x="{x}" y="{y}" width="{w}" height="22" rx="11" fill="#F3F2F1" stroke="{stroke}"{dash}/>')
+    text(x + w / 2, y + 15, label, size=11, color=INK if not dashed else MUTED, anchor="middle")
+    return x + w + 6
+
+
+def arrow(points, label=None, *, dashed=False, color=BLUE, label_at=None, label_anchor="middle"):
+    d = "M " + " L ".join(f"{px} {py}" for px, py in points)
+    dash = ' stroke-dasharray="6 4"' if dashed else ""
+    marker = "arrow-planned" if dashed else "arrow"
+    out.append(
+        f'<path d="{d}" fill="none" stroke="{PLANNED if dashed else color}" stroke-width="1.8"'
+        f'{dash} marker-end="url(#{marker})"/>'
+    )
+    if label:
+        lx, ly = label_at or points[len(points) // 2]
+        width = 10 + 6.2 * len(label)
+        bx = lx - width / 2 if label_anchor == "middle" else lx
+        out.append(f'<rect x="{bx}" y="{ly - 12}" width="{width}" height="17" rx="4" fill="#FFFFFF" opacity="0.95"/>')
+        text(bx + width / 2, ly + 1, label, size=11, color=PLANNED if dashed else BLUE, anchor="middle")
+
+
+W, H = 1820, 1180
+
+# --- Title and legend ----------------------------------------------------------------------
+text(30, 46, "Azure Intelligence Domain — solution design", size=26, weight=700)
+text(30, 72, "Integration platform (phase 1) and Intelligence domain (phase 2) · demo of the Nordic APIs Summit 2026 talk "
+     "“AI as a new architectural domain”", size=13, color=MUTED)
+lx = 1330
+out.append(f'<rect x="{lx}" y="26" width="460" height="56" rx="8" fill="#FAF9F8" stroke="#E1DFDD"/>')
+out.append(f'<rect x="{lx + 14}" y="38" width="34" height="14" rx="3" fill="#FFF" stroke="#C8C6C4"/>')
+text(lx + 56, 50, "Live in Azure", size=11)
+out.append(f'<rect x="{lx + 14}" y="60" width="34" height="14" rx="3" fill="#FFF" stroke="{PLANNED}" stroke-dasharray="4 3"/>')
+text(lx + 56, 72, "Planned (step 5+ / phase 2)", size=11)
+out.append(f'<line x1="{lx + 230}" y1="45" x2="{lx + 266}" y2="45" stroke="{BLUE}" stroke-width="1.8" marker-end="url(#arrow)"/>')
+text(lx + 274, 49, "Live flow", size=11)
+out.append(f'<line x1="{lx + 230}" y1="67" x2="{lx + 266}" y2="67" stroke="{PLANNED}" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-planned)"/>')
+text(lx + 274, 71, "Planned flow", size=11)
+
+# --- Consumers -------------------------------------------------------------------------------
+box(30, 300, 200, 300, "Consumers", fill="#FAF9F8", stroke="#E1DFDD")
+cy = 340
+for label, dashed in [("Webshop", True), ("Customer service", True), ("3PL partner", True),
+                      ("AI agents (MCP)", True), ("Smoke tests", False)]:
+    chip(46, cy, label, dashed=dashed, w=168)
+    cy += 34
+text(130, 540, "Every call carries", size=11, color=MUTED, anchor="middle")
+text(130, 556, "Correlation-Id: ord-4711", size=11, weight=600, color=BLUE, anchor="middle")
+
+# --- GitHub (delivery) -----------------------------------------------------------------------
+box(260, 104, 1530, 128, "GitHub · azure-intelligence-domain organisation · one repository per ownership boundary",
+    fill="#F6F8FA", stroke="#D0D7DE", label_color=INK, label_size=13)
+x = 276
+for repo, dashed in [("azure-landing-zone", False), ("integration-platform", False), ("contracts", False),
+                     ("eventcatalog", False), ("ai-intelligence-domain", False), ("system-api-*", True),
+                     ("process-api-*", True), ("experience-api-*", True), ("backend-systems", True),
+                     ("intelligence-domain", True)]:
+    x = chip(x, 142, repo, dashed=dashed)
+text(276, 194, "GitHub Actions per repository → reusable contract check (adidas API guidelines: lint, version, no breaking "
+     "changes): no contract, no deploy → OIDC login, no stored secrets", size=12, color=MUTED)
+text(276, 214, "Released contracts (asyncapi.yaml / openapi.yaml, topic eventcatalog) → EventCatalog, rebuilt daily",
+     size=12, color=MUTED)
+
+# --- Azure subscription ---------------------------------------------------------------------
+box(260, 258, 1530, 900, "Azure subscription · pay-as-you-go · consumption tiers only · €10/month cap",
+    fill="#FFFFFF", stroke=BLUE, stroke_width=1.6, label_color=BLUE, label_size=14, icon="subscription")
+
+# France Central: API Management
+box(280, 296, 300, 330, "France Central", fill="#F3F2F1", stroke="#E1DFDD")
+box(292, 328, 276, 286, "rg-intplat-platform", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
+    badge=("LIVE", LIVE), tag=("costguard=delete", RED))
+service(304, 364, "apim", "API Management", ["Consumption · apim-intplat-demo", "Global policy: Correlation-Id",
+                                            "required, else 400 Problem", "W3C trace on every call"], w=252)
+text(304, 500, "APIs behind the gateway", size=11, weight=600, color=MUTED)
+chip(304, 510, "[Platform] Health API", w=200)
+chip(304, 538, "Experience APIs", dashed=True, w=150)
+
+# Belgium Central
+box(600, 296, 1170, 846, "Belgium Central", fill="#F3F2F1", stroke="#E1DFDD")
+
+# API-led building blocks (planned)
+box(612, 328, 820, 250, "API-led building blocks · one repository, resource group and identity each",
+    fill="#FFFFFF", stroke=PLANNED, dashed=True, icon="resourcegroup", badge=("STEP 5+", PLANNED),
+    tag=("costguard=delete", RED))
+service(628, 366, "logicapps", "Process APIs", ["Logic Apps (Consumption)", "Order · Fulfilment"], dashed=True, w=250)
+service(895, 366, "functions", "System APIs", ["Functions (Flex Consumption)", "Salesforce · SAP · WMS · 3PL"],
+        dashed=True, w=250)
+service(1162, 366, "cosmos", "Source systems", ["Cosmos DB serverless,", "one per system"], dashed=True, w=255)
+service(1162, 470, "functions", "3PL partner API", ["strict schema: the v2.4", "break returns 400"], dashed=True, w=255)
+
+# Platform core (live)
+box(612, 596, 820, 268, "rg-intplat-platform · integration-platform", fill="#EFF6FC", stroke="#A6CDEF",
+    icon="resourcegroup", badge=("LIVE", LIVE), tag=("costguard=delete", RED))
+service(628, 634, "eventgrid", "Event Grid topics", ["evgt-intplat-sales · finance", "· supply · logistics",
+                                                   "CloudEvents 1.0 · Entra ID only"], w=250)
+service(628, 742, "servicebus", "Service Bus (Basic)", ["sbns-intplat-demo", "queue + DLQ per consumer"], w=250)
+service(1110, 634, "appinsights", "Application Insights", ["appi-intplat-demo", "one trace per journey"], w=306)
+service(1110, 734, "loganalytics", "Log Analytics", ["log-intplat-demo · 30 days", "daily cap 0.15 GB (free tier)"], w=306)
+
+# Bottom row: catalog, identities, guardrails
+box(612, 880, 265, 250, "rg-intplat-eventcatalog", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
+    badge=("LIVE", LIVE), tag=("costguard=delete", RED))
+service(624, 918, "storage", "EventCatalog", ["Storage static website", "generated from released", "contracts"], w=241)
+text(630, 1026, "Domains · services · events ·", size=11, color=MUTED)
+text(630, 1042, "channels · owners · envelope", size=11, color=MUTED)
+
+box(890, 880, 265, 250, "rg-intplat-identities", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
+    badge=("LIVE", LIVE), tag=("never deleted", LIVE))
+service(902, 918, "identity", "Managed identities", ["one per building block", "Contributor on its own", "resource group only"], w=241)
+text(908, 1026, "GitHub OIDC: each repository", size=11, color=MUTED)
+text(908, 1042, "deploys only its own group", size=11, color=MUTED)
+
+box(1168, 880, 264, 250, "rg-intplat-guardrails", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
+    badge=("LIVE", LIVE), tag=("never deleted", LIVE))
+service(1180, 918, "cost", "Budget €10 / month", ["alerts 50 · 80 · 100 %"], w=240)
+service(1180, 1002, "logicapps", "Kill switch", ["at 100 %: deletes costguard", "groups, purges API Mgmt"], w=240)
+
+# Intelligence domain (phase 2)
+box(1450, 328, 308, 802, "Intelligence domain · phase 2", fill="#FFFFFF", stroke=PLANNED, dashed=True,
+    badge=("PHASE 2", PLANNED))
+service(1464, 366, "eventhubs", "Ingest · the tap", ["every topic, queue and", "trace mirrored"], dashed=True, w=280)
+service(1464, 470, "cosmos", "Remember · graph", ["how it connects:", "order → flow → API → deploy"], dashed=True, w=280)
+service(1464, 574, "search", "Remember · vectors", ["runbooks, incidents,", "contracts"], dashed=True, w=280)
+service(1464, 678, "foundry", "Reason · Foundry", ["GraphRAG + LLM,", "answers with citations"], dashed=True, w=280)
+service(1464, 782, "apim", "Expose · MCP + API", ["trace_journey(ACME, 4711)", "via API Management"], dashed=True, w=280)
+text(1604, 900, "“Where is ACME's order 4711?”", size=12, weight=600, color=MUTED, anchor="middle", italic=True)
+text(1604, 920, "Paid and stock reserved, but the", size=11, color=MUTED, anchor="middle")
+text(1604, 936, "shipment request never reached", size=11, color=MUTED, anchor="middle")
+text(1604, 952, "the 3PL: since deploy v2.4 of", size=11, color=MUTED, anchor="middle")
+text(1604, 968, "stock-to-3pl, 12 orders are in", size=11, color=MUTED, anchor="middle")
+text(1604, 984, "the dead-letter queue.", size=11, color=MUTED, anchor="middle")
+
+# --- Flows -----------------------------------------------------------------------------------
+arrow([(230, 400), (304, 400)], "HTTPS", label_at=(267, 392))
+arrow([(556, 400), (628, 400)], "route", dashed=True, label_at=(592, 392))
+arrow([(878, 400), (895, 400)], dashed=True)
+text(886, 361, "via gateway", size=10, color=PLANNED, anchor="middle")
+arrow([(1145, 400), (1162, 400)], dashed=True)
+text(1153, 361, "managed identity", size=10, color=PLANNED, anchor="middle")
+arrow([(1020, 434), (1020, 505), (1162, 505)], "call", dashed=True, label_at=(1080, 505))
+arrow([(790, 454), (790, 634)], "publish CloudEvents", dashed=True, label_at=(790, 520))
+arrow([(753, 721), (753, 742)])
+arrow([(628, 785), (618, 785), (618, 420), (628, 420)], dashed=True)
+text(606, 600, "receive", size=10, color=PLANNED, anchor="middle")
+arrow([(556, 470), (580, 470), (580, 587), (1263, 587), (1263, 634)], "one trace per call (W3C)", label_at=(1060, 587))
+arrow([(1263, 701), (1263, 734)])
+arrow([(1300, 991), (1300, 1002)])
+arrow([(1416, 760), (1441, 760), (1441, 400), (1464, 400)], dashed=True)
+text(1441, 300 + 290, "tap", size=10, color=PLANNED, anchor="middle")
+arrow([(1022, 232), (1022, 258)], "OIDC: each repository deploys its own resource group",
+      label_at=(1180, 248))
+svg = (
+    f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" '
+    'font-family="Segoe UI, -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif">'
+    '<defs>'
+    f'<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="{BLUE}"/></marker>'
+    f'<marker id="arrow-planned" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="{PLANNED}"/></marker>'
+    '</defs>'
+    f'<rect width="{W}" height="{H}" fill="#FFFFFF"/>'
+    + "".join(out)
+    + f'<text x="30" y="{H - 12}" font-size="10" fill="{MUTED}">Icons: Microsoft Azure Architecture Icons V24. '
+    'Generated by docs/architecture/solution_design.py · regions verified 2026-10-16.</text>'
+    "</svg>"
+)
+OUT.write_text(svg, encoding="utf-8")
+print(f"wrote {OUT} ({len(svg) // 1024} KB)")

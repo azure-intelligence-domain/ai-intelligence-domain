@@ -49,6 +49,9 @@ cost decisions per service.
 
 ## Architecture (phase 1)
 
+[![Solution design](docs/architecture/solution-design.svg)](docs/architecture/)
+
+
 | Layer | Building blocks | Azure service |
 |---|---|---|
 | Gateway | All APIs exposed through one gateway | API Management (Consumption) |

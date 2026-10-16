@@ -32,7 +32,7 @@ questions no single system can answer, such as *"Where is ACME's order
 | Step | What | Status |
 |---|---|---|
 | 0 | Repo structure, rules, decision log | ✅ |
-| 1 | Foundation: Azure subscription, budget + kill switch ([guardrails](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/guardrails)), GitHub repo, OIDC | 🔄 |
+| 1 | Foundation: Azure subscription, budget + kill switch ([guardrails](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/guardrails)), GitHub organisation, OIDC deploy identity ([bootstrap](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/bootstrap)) | ✅ |
 | 2 | Envelope contract: CloudEvents + `correlationid`, `customerid`, `orderid` | ⏳ |
 | 3 | Contract tooling: linting, breaking-change checks, EventCatalog | ⏳ |
 | 4 | Platform core (Bicep): API Management, Event Grid, Service Bus, App Insights, Key Vault | ⏳ |
@@ -161,7 +161,7 @@ sequenceDiagram
 | Repository | Owner | Status |
 |---|---|---|
 | [ai-intelligence-domain](https://github.com/azure-intelligence-domain/ai-intelligence-domain) | Architecture | ✅ this repository |
-| [azure-landing-zone](https://github.com/azure-intelligence-domain/azure-landing-zone) | Platform team | 🔄 guardrails deployed |
+| [azure-landing-zone](https://github.com/azure-intelligence-domain/azure-landing-zone) | Platform team | ✅ guardrails + OIDC pipeline |
 | integration-platform | Platform team | ⏳ step 4 |
 | contracts | Platform team | ⏳ step 2 |
 | eventcatalog | Platform team | ⏳ step 3 |

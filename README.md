@@ -42,7 +42,8 @@ questions no single system can answer, such as *"Where is ACME's order
 | 3 | Contract tooling: linting, breaking-change checks, [EventCatalog](https://azure-intelligence-domain.github.io/eventcatalog/) | ✅ |
 | 4 | Platform core: API Management, Event Grid, Service Bus, App Insights ([integration-platform](https://github.com/azure-intelligence-domain/integration-platform), [ADR 0010](docs/adr/0010-platform-core.md)) | ✅ |
 | 4b | Tap by default and the agent gateway ([ADR 0011](docs/adr/0011-tap-by-default.md), [ADR 0012](docs/adr/0012-agent-gateway.md)) | ✅ |
-| 5 | First vertical slice: Salesforce System API → Order Process API → `OrderCreated`, one trace | ⏳ |
+| 5a | Order domain design: business events (Event Storming), commands and queries, BPMN flows ([process-api-order](https://github.com/azure-intelligence-domain/process-api-order), [ADR 0013](docs/adr/0013-order-domain.md)) | ✅ |
+| 5b | Order domain implementation: Order Process API, Salesforce System API, source system, order topic, tapped queries | ⏳ |
 | 6 | SAP, WMS, 3PL System APIs and the Fulfilment Process API | ⏳ |
 | 7 | Experience APIs | ⏳ |
 | 8 | The v2.4 break: faulty `stock-to-3pl` mapping, dead letters arrive | ⏳ |
@@ -178,7 +179,8 @@ sequenceDiagram
 | template-api | Platform team | ⏳ step 5 |
 | backend-systems | Outside world | ⏳ step 5 |
 | system-api-salesforce, -sap, -wms, -3pl | Domain teams | ⏳ steps 5–6 |
-| process-api-order, -fulfilment | Domain teams | ⏳ steps 5–6 |
+| [process-api-order](https://github.com/azure-intelligence-domain/process-api-order) | Order team | ✅ v0.1.0: design (contracts, BPMN) |
+| process-api-fulfilment | Domain teams | ⏳ step 6 |
 | experience-api-customer-service, -partner, -webshop | Channel teams | ⏳ step 7 |
 | intelligence-domain | Intelligence team | ⏳ phase 2 |
 

@@ -24,6 +24,11 @@ Azure demo of the talk "AI as a new architectural domain" (Nordic APIs Summit
    the Spectral ruleset in the `contracts` repository. Deviations only via
    ADR 0008, each with its reason.
 
+8. **Events are business facts** (Event Storming): past tense, the producing
+   domain's language, one event per intent, never CRUD (`OrderPlaced`, not
+   `OrderCreated`; no `OrderUpdated`). Nothing is deleted: soft deletes with
+   statuses. When a name is unclear, ask the user.
+
 ## Cost rules (hard)
 
 - Monthly ceiling **€10**. Consumption / pay-per-use tiers only.

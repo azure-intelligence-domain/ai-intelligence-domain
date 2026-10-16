@@ -17,7 +17,7 @@ Azure demo of the talk "AI as a new architectural domain" (Nordic APIs Summit
    no deploy. Every contract is versioned and has an owner.
 5. **One trace per journey.** OpenTelemetry context propagates across every
    hop.
-6. **Everything is cataloged** in EventCatalog (`catalog/`).
+6. **Everything is cataloged** in EventCatalog (`eventcatalog` repository).
 
 ## Cost rules (hard)
 
@@ -26,13 +26,16 @@ Azure demo of the talk "AI as a new architectural domain" (Nordic APIs Summit
   approval before it is deployed.
 - Never remove or weaken the budget, the kill switch or the Log Analytics
   daily cap.
+- Every demo resource group is tagged `costguard=delete` (except
+  `rg-intplat-guardrails`). An untagged group escapes the kill switch.
 
 ## How we work
 
 - Build in the order of README.md. Finish and verify one step before the next.
 - Basics before features: correctness, contracts and tests over polish.
-- API-led and composable: one folder, one resource group, one pipeline per
-  building block (`apis/<layer>/<name>/`).
+- API-led and composable: one repository, one resource group, one deploy
+  identity and one pipeline per building block (ADR 0006). Repositories live
+  in the GitHub organisation `azure-intelligence-domain`.
 - Infrastructure as code only (Bicep). No manual portal changes.
 - Record every non-trivial choice as an ADR (`docs/adr/0000-template.md`).
 - Diagrams in `.md` files are Mermaid (renders on GitHub). Update them in the

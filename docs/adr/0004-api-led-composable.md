@@ -1,6 +1,6 @@
 # 0004 — API-led and composable integration platform
 
-- **Status:** accepted
+- **Status:** accepted, refined by 0006 (folders became repositories)
 - **Date:** 2026-10-16
 
 ## Context

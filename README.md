@@ -21,6 +21,9 @@ questions no single system can answer, such as *"Where is ACME's order
 - **API-led and composable** ([ADR 0004](docs/adr/0004-api-led-composable.md)).
 - **Contracts on everything**, documented in EventCatalog
   ([ADR 0005](docs/adr/0005-contracts-everywhere-eventcatalog.md)).
+- **One repository per ownership boundary** in the GitHub organisation
+  [azure-intelligence-domain](https://github.com/azure-intelligence-domain)
+  ([ADR 0006](docs/adr/0006-repository-per-ownership-boundary.md)).
 
 ## Phase 1 — Integration platform
 
@@ -29,7 +32,7 @@ questions no single system can answer, such as *"Where is ACME's order
 | Step | What | Status |
 |---|---|---|
 | 0 | Repo structure, rules, decision log | ✅ |
-| 1 | Foundation: Azure subscription, budget + kill switch, GitHub repo, OIDC | ⏳ |
+| 1 | Foundation: Azure subscription, budget + kill switch ([guardrails](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/guardrails)), GitHub repo, OIDC | 🔄 |
 | 2 | Envelope contract: CloudEvents + `correlationid`, `customerid`, `orderid` | ⏳ |
 | 3 | Contract tooling: linting, breaking-change checks, EventCatalog | ⏳ |
 | 4 | Platform core (Bicep): API Management, Event Grid, Service Bus, App Insights, Key Vault | ⏳ |
@@ -52,12 +55,14 @@ cost decisions per service.
 | Process | Order, Fulfilment | Logic Apps (Consumption) |
 | System | Salesforce, SAP, WMS, 3PL | Functions (Flex Consumption, Python) |
 | Events | Business events between domains | Event Grid → Service Bus Basic queue per subscriber (with DLQ) |
-| Backends | SAP, WMS, 3PL mocks; Salesforce mock or Developer Edition | Functions |
+| Backends | Simulated Salesforce, SAP, WMS and 3PL, each with its own database (ADR 0007, proposed) | Cosmos DB serverless or Azure SQL free + Functions (3PL partner API) |
 | Observability | One trace per journey | Application Insights + Log Analytics |
 | Secrets & identity | No secrets in code | Key Vault, managed identities |
 | Catalog | Domains, services, events, contracts, owners | EventCatalog on Static Web Apps (Free) |
 
-Region availability per service is verified at step 4 and noted here.
+**Regions** (verified 2026-10-16): everything in **Belgium Central**, except
+API Management (Consumption tier not offered there) and Static Web Apps
+(not offered there), which run in **West Europe**.
 
 ### API-led layers
 
@@ -151,18 +156,20 @@ sequenceDiagram
     Note over FP,DLQ: 12 orders worth €84k, ACME is one of them
 ```
 
-## Repository layout (target)
+## Repositories
 
-```
-contracts/          envelope schema and shared event definitions
-apis/
-  system/<name>/    one building block: openapi.yaml, src/, infra/, tests/, README.md
-  process/<name>/
-  experience/<name>/
-platform/infra/     shared foundation (Bicep), deployed once
-catalog/            EventCatalog
-.github/workflows/  one pipeline per building block
-docs/adr/           architecture decision records
-```
+| Repository | Owner | Status |
+|---|---|---|
+| [ai-intelligence-domain](https://github.com/azure-intelligence-domain/ai-intelligence-domain) | Architecture | ✅ this repository |
+| [azure-landing-zone](https://github.com/azure-intelligence-domain/azure-landing-zone) | Platform team | 🔄 guardrails deployed |
+| integration-platform | Platform team | ⏳ step 4 |
+| contracts | Platform team | ⏳ step 2 |
+| eventcatalog | Platform team | ⏳ step 3 |
+| template-api | Platform team | ⏳ step 5 |
+| backend-systems | Outside world | ⏳ step 5 |
+| system-api-salesforce, -sap, -wms, -3pl | Domain teams | ⏳ steps 5–6 |
+| process-api-order, -fulfilment | Domain teams | ⏳ steps 5–6 |
+| experience-api-customer-service, -partner, -webshop | Channel teams | ⏳ step 7 |
+| intelligence-domain | Intelligence team | ⏳ phase 2 |
 
-Folders are added by the step that needs them.
+How they relate: see [ADR 0006](docs/adr/0006-repository-per-ownership-boundary.md).

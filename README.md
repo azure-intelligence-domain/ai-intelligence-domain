@@ -36,7 +36,7 @@ questions no single system can answer, such as *"Where is ACME's order
 | 1 | Foundation: Azure subscription, budget + kill switch ([guardrails](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/guardrails)), GitHub organisation, OIDC deploy identity ([bootstrap](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/bootstrap)) | ✅ |
 | 2 | Envelope contract: CloudEvents + `correlationid`, `customerid`, `orderid` ([contracts](https://github.com/azure-intelligence-domain/contracts)) | ✅ |
 | 3 | Contract tooling: linting, breaking-change checks, [EventCatalog](https://stcatalogxyxd4f2znqkqy.z50.web.core.windows.net) | ✅ |
-| 4 | Platform core (Bicep): API Management, Event Grid, Service Bus, App Insights, Key Vault | ⏳ |
+| 4 | Platform core: API Management, Event Grid, Service Bus, App Insights ([integration-platform](https://github.com/azure-intelligence-domain/integration-platform), [ADR 0010](docs/adr/0010-platform-core.md)) | ✅ |
 | 5 | First vertical slice: Salesforce System API → Order Process API → `OrderCreated`, one trace | ⏳ |
 | 6 | SAP, WMS, 3PL System APIs and the Fulfilment Process API | ⏳ |
 | 7 | Experience APIs | ⏳ |
@@ -58,7 +58,7 @@ cost decisions per service.
 | Events | Business events between domains | Event Grid → Service Bus Basic queue per subscriber (with DLQ) |
 | Backends | Simulated Salesforce, SAP, WMS and 3PL, each with its own database (ADR 0007) | Cosmos DB serverless, one account per system + Functions (3PL partner API) |
 | Observability | One trace per journey | Application Insights + Log Analytics |
-| Secrets & identity | No secrets in code | Key Vault, managed identities |
+| Secrets & identity | No secrets in code | Managed identities; Key Vault with the first real secret ([ADR 0010](docs/adr/0010-platform-core.md)) |
 | Catalog | Domains, services, events, contracts, owners | EventCatalog, generated from released contracts, on a storage static website ([ADR 0009](docs/adr/0009-eventcatalog-generated-from-contracts.md)) |
 
 **Regions** (verified 2026-10-16): everything in **Belgium Central**, except
@@ -163,7 +163,7 @@ sequenceDiagram
 |---|---|---|
 | [ai-intelligence-domain](https://github.com/azure-intelligence-domain/ai-intelligence-domain) | Architecture | ✅ this repository |
 | [azure-landing-zone](https://github.com/azure-intelligence-domain/azure-landing-zone) | Platform team | ✅ guardrails + OIDC pipeline |
-| integration-platform | Platform team | ⏳ step 4 |
+| [integration-platform](https://github.com/azure-intelligence-domain/integration-platform) | Platform team | ✅ v1.0.0: gateway, events, queues, tracing |
 | [contracts](https://github.com/azure-intelligence-domain/contracts) | Platform team | ✅ v1.1.0: envelope, rules, contract check |
 | [eventcatalog](https://github.com/azure-intelligence-domain/eventcatalog) | Platform team | ✅ [live](https://stcatalogxyxd4f2znqkqy.z50.web.core.windows.net) |
 | template-api | Platform team | ⏳ step 5 |

@@ -17,7 +17,9 @@ Azure demo of the talk "AI as a new architectural domain" (Nordic APIs Summit
    no deploy. Every contract is versioned and has an owner.
 5. **One trace per journey.** OpenTelemetry context propagates across every
    hop.
-6. **Everything is cataloged** in EventCatalog (`eventcatalog` repository).
+6. **Everything is cataloged** in EventCatalog (`eventcatalog` repository), from
+   step 3 on: every domain, service, event, channel and owner is added to the
+   catalog in the same step that builds it, never afterwards.
 7. **All contracts follow the adidas API guidelines** (ADR 0008), enforced by
    the Spectral ruleset in the `contracts` repository. Deviations only via
    ADR 0008, each with its reason.

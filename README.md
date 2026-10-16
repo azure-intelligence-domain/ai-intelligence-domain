@@ -20,7 +20,8 @@ questions no single system can answer, such as *"Where is ACME's order
   budget and a kill switch ([ADR 0003](docs/adr/0003-azure-consumption-with-cost-cap.md)).
 - **API-led and composable** ([ADR 0004](docs/adr/0004-api-led-composable.md)).
 - **Contracts on everything**, documented in EventCatalog
-  ([ADR 0005](docs/adr/0005-contracts-everywhere-eventcatalog.md)).
+  ([ADR 0005](docs/adr/0005-contracts-everywhere-eventcatalog.md)), following
+  the **adidas API guidelines** ([ADR 0008](docs/adr/0008-adidas-api-guidelines.md)).
 - **One repository per ownership boundary** in the GitHub organisation
   [azure-intelligence-domain](https://github.com/azure-intelligence-domain)
   ([ADR 0006](docs/adr/0006-repository-per-ownership-boundary.md)).
@@ -33,7 +34,7 @@ questions no single system can answer, such as *"Where is ACME's order
 |---|---|---|
 | 0 | Repo structure, rules, decision log | ✅ |
 | 1 | Foundation: Azure subscription, budget + kill switch ([guardrails](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/guardrails)), GitHub organisation, OIDC deploy identity ([bootstrap](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/bootstrap)) | ✅ |
-| 2 | Envelope contract: CloudEvents + `correlationid`, `customerid`, `orderid` | ⏳ |
+| 2 | Envelope contract: CloudEvents + `correlationid`, `customerid`, `orderid` ([contracts](https://github.com/azure-intelligence-domain/contracts)) | 🔄 |
 | 3 | Contract tooling: linting, breaking-change checks, EventCatalog | ⏳ |
 | 4 | Platform core (Bicep): API Management, Event Grid, Service Bus, App Insights, Key Vault | ⏳ |
 | 5 | First vertical slice: Salesforce System API → Order Process API → `OrderCreated`, one trace | ⏳ |
@@ -163,7 +164,7 @@ sequenceDiagram
 | [ai-intelligence-domain](https://github.com/azure-intelligence-domain/ai-intelligence-domain) | Architecture | ✅ this repository |
 | [azure-landing-zone](https://github.com/azure-intelligence-domain/azure-landing-zone) | Platform team | ✅ guardrails + OIDC pipeline |
 | integration-platform | Platform team | ⏳ step 4 |
-| contracts | Platform team | ⏳ step 2 |
+| [contracts](https://github.com/azure-intelligence-domain/contracts) | Platform team | 🔄 step 2 |
 | eventcatalog | Platform team | ⏳ step 3 |
 | template-api | Platform team | ⏳ step 5 |
 | backend-systems | Outside world | ⏳ step 5 |

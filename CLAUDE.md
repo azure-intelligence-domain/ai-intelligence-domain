@@ -18,6 +18,9 @@ Azure demo of the talk "AI as a new architectural domain" (Nordic APIs Summit
 5. **One trace per journey.** OpenTelemetry context propagates across every
    hop.
 6. **Everything is cataloged** in EventCatalog (`eventcatalog` repository).
+7. **All contracts follow the adidas API guidelines** (ADR 0008), enforced by
+   the Spectral ruleset in the `contracts` repository. Deviations only via
+   ADR 0008, each with its reason.
 
 ## Cost rules (hard)
 

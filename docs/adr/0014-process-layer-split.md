@@ -3,6 +3,7 @@
 - **Status:** accepted
 - **Date:** 2026-10-16
 - **Refines:** 0004 (process layer), 0006 (building blocks), 0011 (routing)
+- **Amended by:** 0015 (one integration flow per receiving domain)
 
 ## Context
 
@@ -21,7 +22,7 @@ and routes events.
 | Kind | Technology | Example | Owns |
 |---|---|---|---|
 | Domain process API (the brain) | Azure Function (Python, Flex Consumption) | `process-api-order` | Status, rules, the domain's events |
-| Integration flow (the hands) | Logic App (Consumption) | `order-to-erp`, `stock-to-3pl` | Mapping and calls between systems |
+| Integration flow (the hands) | Logic App (Consumption), one per receiving domain (ADR 0015) | `finance-intake`, `logistics-intake` | Mapping and calls to its own domain's systems |
 
 Integration flows react to events from their own queue and call System APIs
 through the gateway. They publish nothing of their own: the System API behind

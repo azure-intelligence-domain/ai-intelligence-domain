@@ -46,7 +46,7 @@ questions no single system can answer, such as *"Where is ACME's order
 | 5b | Order domain implementation: Order Process API, Salesforce System API, source system, order topic, tapped queries ([ADR 0014](docs/adr/0014-process-layer-split.md)); journey test: order 4711 end to end, 19 hops in the tap | ✅ |
 | 6 | SAP, WMS, 3PL System APIs and the Fulfilment Process API | ⏳ |
 | 7 | Experience APIs | ⏳ |
-| 8 | The v2.4 break: faulty `stock-to-3pl` mapping, dead letters arrive | ⏳ |
+| 8 | The v2.4 break: faulty `logistics-intake` mapping, dead letters arrive | ⏳ |
 
 ## Phase 2 — Intelligence domain
 
@@ -57,13 +57,15 @@ cost decisions per service.
 
 [![Solution design](docs/architecture/solution-design.svg)](docs/architecture/)
 
+Data models per domain, joined by their business keys: [docs/architecture/data-models.md](docs/architecture/data-models.md).
+
 
 | Layer | Building blocks | Azure service |
 |---|---|---|
 | Gateways | People and websites: `apim-intplat-demo`. AI agents: `apim-intplat-agents` (Entra token per agent) | API Management (Consumption), France Central |
-| Tap | Every topic, gateway mutation, agent action, deployment and trace, kept for the Intelligence domain | Event Grid tap subscriptions + Log Analytics export → `sttapintplatdemo` (`rg-intplat-tap`, never deleted) |
+| Tap | Every topic, gateway query and mutation, agent action, deployment and trace, kept for the Intelligence domain | Event Grid tap subscriptions + Log Analytics export → `sttapintplatdemo` (`rg-intplat-tap`, never deleted) |
 | Experience | Customer Service, Partner (3PL), Webshop | API Management (+ thin Functions) |
-| Process | Order, Fulfilment | Logic Apps (Consumption) |
+| Process | Domain process APIs (the brain): Order. Integration flows (the hands): one `<domain>-intake` per receiving domain ([ADR 0014](docs/adr/0014-process-layer-split.md), [0015](docs/adr/0015-one-intake-per-domain.md)) | Functions (Flex Consumption, Python); Logic Apps (Consumption) |
 | System | Salesforce, SAP, WMS, 3PL | Functions (Flex Consumption, Python) |
 | Events | Business events between domains | Event Grid → Service Bus Basic queue per subscriber (with DLQ) |
 | Backends | Simulated Salesforce, SAP, WMS and 3PL, each with its own database (ADR 0007) | Cosmos DB serverless, one account per system + Functions (3PL partner API) |
@@ -92,10 +94,10 @@ flowchart TB
         exp_web["Webshop API"]
     end
 
-    subgraph process["Process layer · Logic Apps Consumption"]
+    subgraph process["Process layer"]
         direction LR
-        proc_order["Order Process API"]
-        proc_fulfil["Fulfilment Process API"]
+        proc_order["Order Process API<br/>Function · the brain"]
+        flows["finance-intake · supply-intake · logistics-intake<br/>Logic Apps · the hands, one per receiving domain"]
     end
 
     subgraph events["Events"]
@@ -125,8 +127,9 @@ flowchart TB
 
     consumers --> apim --> experience
     experience --> process
-    process -- "publish" --> eg --> sbq -- "subscribe" --> process
-    process --> system
+    proc_order -- "publish facts" --> eg --> sbq -- "own queue per domain" --> flows
+    system -- "publish facts" --> eg
+    process -- "via API Management" --> system
     sys_sf --> sf
     sys_sap --> sap
     sys_wms --> wms
@@ -136,35 +139,37 @@ flowchart TB
 ### The ACME 4711 journey
 
 What the platform sees for one order. After deployment v2.4 of
-`stock-to-3pl`, the 3PL rejects the shipment request and it lands in the
+`logistics-intake`, the 3PL rejects the shipment request and it lands in the
 dead-letter queue.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant SF as Salesforce
+    participant SR as Sales rep
     participant OP as Order Process API
-    participant EG as Event Grid
-    participant FP as Fulfilment Process API
+    participant EO as evgt-intplat-order
+    participant FI as finance-intake
     participant SAP as SAP System API
+    participant SI as supply-intake
     participant WMS as WMS System API
+    participant LI as logistics-intake v2.4
     participant TPL as 3PL System API
-    participant DLQ as Dead-letter queue
+    participant DLQ as logistics dead letters
 
-    Note over SF,DLQ: correlationid ord-4711 · customerid ACME · orderid 4711 on every hop
-    SF->>OP: Opportunity closed-won, create order 4711
-    OP->>EG: OrderCreated
-    EG->>FP: OrderCreated
-    FP->>SAP: Create sales order
-    SAP-->>FP: Confirmed
-    FP->>EG: OrderConfirmed
-    FP->>WMS: Reserve stock
-    WMS-->>FP: Reserved
-    FP->>EG: StockReserved
-    FP->>TPL: ShipmentRequest via stock-to-3pl v2.4
-    TPL-->>FP: 400 schema mismatch
-    FP->>DLQ: Dead-lettered with reason
-    Note over FP,DLQ: 12 orders worth €84k, ACME is one of them
+    Note over SR,DLQ: correlationid ord-4711 · customerid ACME · orderid 4711 on every hop, all in the tap
+    SR->>OP: Place order (via gateway)
+    OP->>EO: OrderPlaced
+    EO->>FI: OrderPlaced (finance queue)
+    FI->>SAP: Create sales order
+    SAP-->>OP: SalesOrderAccepted (finance topic)
+    OP->>EO: OrderConfirmed
+    EO->>SI: OrderConfirmed (supply queue)
+    SI->>WMS: Reserve stock
+    WMS-->>LI: StockReserved (supply topic → logistics queue)
+    LI->>TPL: Shipment request (mapping v2.4)
+    TPL-->>LI: 400 schema mismatch
+    LI->>DLQ: Dead-lettered with reason
+    Note over LI,DLQ: 12 orders worth €84k stuck readyForShipment, ACME is one of them
 ```
 
 ## Repositories

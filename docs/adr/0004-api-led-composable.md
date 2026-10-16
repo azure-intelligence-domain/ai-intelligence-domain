@@ -1,6 +1,6 @@
 # 0004 — API-led and composable integration platform
 
-- **Status:** accepted, refined by 0006 (folders became repositories)
+- **Status:** accepted, refined by 0006 (folders became repositories) and 0014 (process layer split)
 - **Date:** 2026-10-16
 
 ## Context

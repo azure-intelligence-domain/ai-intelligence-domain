@@ -46,6 +46,7 @@ Azure demo of the talk "AI as a new architectural domain" (Nordic APIs Summit
 - Diagrams in `.md` files are Mermaid (renders on GitHub). Update them in the
   same change as the thing they describe, and check they render
   (`npx -y @mermaid-js/mermaid-cli@11 -i <file>.md -o /tmp/out.md`).
-- Region Belgium Central; West Europe fallback per service, noted in README.
+- Region Belgium Central; France Central fallback per service, noted in README.
+  West Europe does not accept new customers for this subscription.
 - No secrets in the repo. CI/CD uses GitHub OIDC.
 - Python 3.12+ (via `uv`). Keep code readable enough to show on a slide.

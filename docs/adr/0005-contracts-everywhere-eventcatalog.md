@@ -1,6 +1,6 @@
 # 0005 — Contracts on everything, documented in EventCatalog
 
-- **Status:** accepted
+- **Status:** accepted (hosting and generation detailed in 0009)
 - **Date:** 2026-10-16
 
 ## Context
@@ -22,7 +22,8 @@ exists, who owns it and who consumes it.
   change (oasdiff for OpenAPI, AsyncAPI CLI diff for AsyncAPI).
 - **EventCatalog** is the catalog: domains, services, events, commands,
   channels, owners and the contracts attached to each service. It is a static
-  site, hosted for free on **Azure Static Web Apps (Free tier)**.
+  site, hosted for free on **Azure Static Web Apps (Free tier)**. *(Changed in
+  ADR 0009: a storage static website in Belgium Central.)*
 
 ```mermaid
 flowchart LR
@@ -35,7 +36,7 @@ flowchart LR
     merge --> impl["Implement against contract"]
     impl --> deploy["Deploy building block"]
     merge --> gen["Update EventCatalog<br/>domains · services · events · owners"]
-    gen --> swa["EventCatalog site<br/>Static Web Apps Free"]
+    gen --> swa["EventCatalog site<br/>storage static website (ADR 0009)"]
 ```
 
 ## Alternatives considered

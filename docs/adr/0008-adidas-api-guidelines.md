@@ -75,6 +75,8 @@ standard requires otherwise, the platform adapts as follows.
 | `x-leanixid` (SHOULD) and LeanIX in `externalDocs` | Rules off; `externalDocs` must point to the EventCatalog entry (`platform-external-docs-catalog`) | No LeanIX; EventCatalog is the catalog. |
 | Contact needs email **or** url | Spectral's `contact-properties` rules (which demand both) are off; `platform-contact-email-or-url` enforces the adidas rule | Public repositories, no team mailboxes. |
 | `x-producers` / `x-consumers` SHOULD | MUST | The Intelligence domain needs them to answer "who produces this" and "which consumers break if this changes". |
+| One spec per namespace with `publish` (producers) and `subscribe` (consumers) on each channel | The producer's contract has only `publish` and owns the message; each consumer has its own contract with only `subscribe`, referring to the producer's released message | The AsyncAPI parser rejects one message under both operations, and EventCatalog maps `publish` to "sends" and `subscribe` to "receives". It also follows adidas's own principle that producers do not need to know their consumers. |
+| Schema Registry compatibility checks | The reusable contract check: `info.version` must increase on every change; no breaking change against the last release (oasdiff for OpenAPI; `@asyncapi/diff` plus a payload check for AsyncAPI) | `@asyncapi/diff` does not classify message payload changes, and treats a raised `info.version` as breaking. The payload check implements the adidas rules for extending directly. |
 | `x-gateway` values kong, nginx, aws, akamai, sap, other | `other` | Azure API Management is not in the adidas list. |
 | — | Every operation MUST accept `Correlation-Id`; every event MUST use the platform envelope | The talk's "one rule", applied to synchronous and asynchronous calls alike. |
 
@@ -89,6 +91,9 @@ standard requires otherwise, the platform adapts as follows.
 
 ## Consequences
 
+- Every repository calls the reusable workflow
+  `contracts/.github/workflows/contract-check.yml` before it deploys: no
+  contract, no deploy.
 - A known Spectral 6.17 bug rejects server variable `examples` arrays
   (AsyncAPI 2.6 defines an array); the landscape describes examples in the
   description instead.

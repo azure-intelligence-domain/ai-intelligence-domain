@@ -16,8 +16,11 @@ only send alerts; they do not stop resources.
 ## Decision
 
 - Host everything in Azure, region **Belgium Central**. Where a required
-  service or tier is not available there, fall back to **West Europe**, and
-  record that per service in the README mapping table.
+  service or tier is not available there, fall back to **France Central**,
+  and record that per service in the README mapping table. (Originally West
+  Europe; changed on 2026-10-16 because West Europe does not accept new
+  customers for this subscription, for API Management and Static Web Apps
+  alike.)
 - Use only **consumption / pay-per-use tiers**: API Management Consumption,
   Functions (Flex) Consumption, Logic Apps Consumption, Event Grid basic
   topics, Service Bus Basic, Log Analytics pay-as-you-go with a daily cap.

@@ -15,7 +15,7 @@ questions no single system can answer, such as *"Where is ACME's order
 ## Scope
 
 - **Demo / reference only.** Not production.
-- **Azure**, region Belgium Central (West Europe as fallback per service).
+- **Azure**, region Belgium Central (France Central as fallback per service).
 - **Consumption tiers only.** Hard ceiling of **€10/month**, enforced by a
   budget and a kill switch ([ADR 0003](docs/adr/0003-azure-consumption-with-cost-cap.md)).
 - **API-led and composable** ([ADR 0004](docs/adr/0004-api-led-composable.md)).
@@ -35,7 +35,7 @@ questions no single system can answer, such as *"Where is ACME's order
 | 0 | Repo structure, rules, decision log | ✅ |
 | 1 | Foundation: Azure subscription, budget + kill switch ([guardrails](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/guardrails)), GitHub organisation, OIDC deploy identity ([bootstrap](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/bootstrap)) | ✅ |
 | 2 | Envelope contract: CloudEvents + `correlationid`, `customerid`, `orderid` ([contracts](https://github.com/azure-intelligence-domain/contracts)) | ✅ |
-| 3 | Contract tooling: linting, breaking-change checks, EventCatalog | ⏳ |
+| 3 | Contract tooling: linting, breaking-change checks, [EventCatalog](https://stcatalogxyxd4f2znqkqy.z50.web.core.windows.net) | ✅ |
 | 4 | Platform core (Bicep): API Management, Event Grid, Service Bus, App Insights, Key Vault | ⏳ |
 | 5 | First vertical slice: Salesforce System API → Order Process API → `OrderCreated`, one trace | ⏳ |
 | 6 | SAP, WMS, 3PL System APIs and the Fulfilment Process API | ⏳ |
@@ -59,11 +59,11 @@ cost decisions per service.
 | Backends | Simulated Salesforce, SAP, WMS and 3PL, each with its own database (ADR 0007) | Cosmos DB serverless, one account per system + Functions (3PL partner API) |
 | Observability | One trace per journey | Application Insights + Log Analytics |
 | Secrets & identity | No secrets in code | Key Vault, managed identities |
-| Catalog | Domains, services, events, contracts, owners | EventCatalog on Static Web Apps (Free) |
+| Catalog | Domains, services, events, contracts, owners | EventCatalog, generated from released contracts, on a storage static website ([ADR 0009](docs/adr/0009-eventcatalog-generated-from-contracts.md)) |
 
 **Regions** (verified 2026-10-16): everything in **Belgium Central**, except
-API Management (Consumption tier not offered there) and Static Web Apps
-(not offered there), which run in **West Europe**.
+API Management (Consumption tier not offered there), which runs in **France
+Central**. West Europe does not accept new customers for this subscription.
 
 ### API-led layers
 
@@ -110,7 +110,7 @@ flowchart TB
     subgraph shared["Cross-cutting"]
         appi["Application Insights<br/>one trace per journey"]
         kv["Key Vault + managed identities"]
-        catalog["EventCatalog<br/>Static Web Apps Free"]
+        catalog["EventCatalog<br/>generated from contracts"]
     end
 
     consumers --> apim --> experience
@@ -164,8 +164,8 @@ sequenceDiagram
 | [ai-intelligence-domain](https://github.com/azure-intelligence-domain/ai-intelligence-domain) | Architecture | ✅ this repository |
 | [azure-landing-zone](https://github.com/azure-intelligence-domain/azure-landing-zone) | Platform team | ✅ guardrails + OIDC pipeline |
 | integration-platform | Platform team | ⏳ step 4 |
-| [contracts](https://github.com/azure-intelligence-domain/contracts) | Platform team | ✅ envelope v1.0.0 |
-| eventcatalog | Platform team | ⏳ step 3 |
+| [contracts](https://github.com/azure-intelligence-domain/contracts) | Platform team | ✅ v1.1.0: envelope, rules, contract check |
+| [eventcatalog](https://github.com/azure-intelligence-domain/eventcatalog) | Platform team | ✅ [live](https://stcatalogxyxd4f2znqkqy.z50.web.core.windows.net) |
 | template-api | Platform team | ⏳ step 5 |
 | backend-systems | Outside world | ⏳ step 5 |
 | system-api-salesforce, -sap, -wms, -3pl | Domain teams | ⏳ steps 5–6 |

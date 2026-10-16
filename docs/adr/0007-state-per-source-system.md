@@ -68,7 +68,6 @@ flowchart LR
   `backend-systems` repository includes seed data for the ACME 4711 story.
 - If a real system is connected later (for example a Salesforce Developer
   Edition org), only its System API changes.
-
 - Cosmos DB serverless bills per request and per GB stored, with no free
   grant. At demo volume that is cents per month, within the €10 cap.
 - Access uses Cosmos DB's built-in data-plane roles for Entra identities; key

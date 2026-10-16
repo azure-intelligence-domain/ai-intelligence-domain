@@ -22,24 +22,28 @@ Two ways to group them:
 ## Decision
 
 **Every receiving domain has one integration flow, `<domain>-intake`**: one Logic App
-(Consumption), owned by that domain's team, triggered by that domain's own Service Bus queue. The
-platform routes the event types the domain subscribes to into that queue (`consumers.yaml`); the
-flow switches on the event type and calls only its own domain's System APIs, through the gateway.
+(Consumption), owned by that domain's team. The platform routes the event types the domain
+subscribes to (`consumers.yaml`) to it through the gateway's event intake (ADR 0016); the flow
+switches on the event type and calls only its own domain's System APIs, through the gateway.
 
-| Flow | Owner | Queue receives | Calls | The System API then publishes |
+| Flow | Owner | Receives | Calls | The System API then publishes |
 |---|---|---|---|---|
-| `finance-intake` | finance-team | OrderPlaced, OrderAmended, OrderCancelled | SAP System API | SalesOrderAccepted / SalesOrderRefused, InvoiceIssued, PaymentReceived |
-| `supply-intake` | supply-team | OrderConfirmed, OrderCancelled | WMS System API | StockReserved |
-| `logistics-intake` | logistics-team | StockReserved | 3PL System API | ShipmentDispatched, ShipmentDelivered |
+| `finance-intake` | finance-team | OrderPlaced | SAP System API | SalesOrderAccepted / SalesOrderRefused, InvoiceIssued (PaymentReceived when the bank pays) |
+| `supply-intake` | supply-team | OrderConfirmed | WMS System API | StockReserved |
+| `logistics-intake` | logistics-team | OrderReadyForShipment | 3PL System API | ShipmentDispatched (ShipmentDelivered on the partner's notice) |
+
+Built in step 6 (2026-10-17) with two refinements: logistics reacts to **OrderReadyForShipment**
+rather than StockReserved (the order domain decides it is ready, and its event carries the address
+the 3PL needs), and amendments and cancellations are not taken in yet (they need facts such as
+SalesOrderCancelled and StockReleased, to be named with the user).
 
 ```mermaid
 flowchart LR
     papi["Order Process API<br/>(the brain)"] -- "OrderPlaced, OrderConfirmed, ..." --> tOrder[["evgt-intplat-order"]]
-    tOrder -- "routing: consumers.yaml" --> qFin[("sbq-finance-intake")] & qSup[("sbq-supply-intake")]
-    qFin --> fin["finance-intake<br/>Logic App"] -- "via gateway" --> sap["SAP System API"]
-    qSup --> sup["supply-intake<br/>Logic App"] -- "via gateway" --> wms["WMS System API"]
-    wms -- "StockReserved" --> tSup[["evgt-intplat-supply"]] --> qLog[("sbq-logistics-intake")]
-    qLog --> log["logistics-intake<br/>Logic App"] -- "via gateway" --> tpl["3PL System API"]
+    tOrder -- "OrderPlaced (event intake)" --> fin["finance-intake<br/>Logic App"] -- "via gateway" --> sap["SAP System API"]
+    tOrder -- "OrderConfirmed" --> sup["supply-intake<br/>Logic App"] -- "via gateway" --> wms["WMS System API"]
+    tOrder -- "OrderReadyForShipment" --> log["logistics-intake<br/>Logic App"] -- "via gateway" --> tpl["3PL System API"]
+    sap & wms & tpl -- "SalesOrderAccepted, StockReserved, ShipmentDispatched, ..." --> papi
 ```
 
 A flow still publishes nothing of its own (ADR 0014): the System API behind it publishes the fact.
@@ -60,5 +64,5 @@ A flow still publishes nothing of its own (ADR 0014): the System API behind it p
   event in the tap.
 - A domain's flow grows with every event type it takes in; a switch per event type keeps it
   readable (three to five types per domain in this demo).
-- Logic Apps Consumption has one trigger per Logic App: one queue per domain fits exactly. No
-  Standard plan (fixed fee) is needed.
+- Logic Apps Consumption, pushed by Event Grid through the gateway (ADR 0016): no polling, no
+  Standard plan (fixed fee).

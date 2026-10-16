@@ -22,6 +22,10 @@ questions no single system can answer, such as *"Where is ACME's order
 - **Contracts on everything**, documented in EventCatalog
   ([ADR 0005](docs/adr/0005-contracts-everywhere-eventcatalog.md)), following
   the **adidas API guidelines** ([ADR 0008](docs/adr/0008-adidas-api-guidelines.md)).
+- **Tap by default**: every event, gateway mutation, agent action, deployment and trace can
+  reach the Intelligence domain; nobody can opt out ([ADR 0011](docs/adr/0011-tap-by-default.md)).
+- **A separate gateway for AI agents**, with an Entra identity per agent and every call
+  audited ([ADR 0012](docs/adr/0012-agent-gateway.md)).
 - **One repository per ownership boundary** in the GitHub organisation
   [azure-intelligence-domain](https://github.com/azure-intelligence-domain)
   ([ADR 0006](docs/adr/0006-repository-per-ownership-boundary.md)).
@@ -35,8 +39,9 @@ questions no single system can answer, such as *"Where is ACME's order
 | 0 | Repo structure, rules, decision log | ✅ |
 | 1 | Foundation: Azure subscription, budget + kill switch ([guardrails](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/guardrails)), GitHub organisation, OIDC deploy identity ([bootstrap](https://github.com/azure-intelligence-domain/azure-landing-zone/tree/main/bootstrap)) | ✅ |
 | 2 | Envelope contract: CloudEvents + `correlationid`, `customerid`, `orderid` ([contracts](https://github.com/azure-intelligence-domain/contracts)) | ✅ |
-| 3 | Contract tooling: linting, breaking-change checks, [EventCatalog](https://stcatalogxyxd4f2znqkqy.z50.web.core.windows.net) | ✅ |
+| 3 | Contract tooling: linting, breaking-change checks, [EventCatalog](https://azure-intelligence-domain.github.io/eventcatalog/) | ✅ |
 | 4 | Platform core: API Management, Event Grid, Service Bus, App Insights ([integration-platform](https://github.com/azure-intelligence-domain/integration-platform), [ADR 0010](docs/adr/0010-platform-core.md)) | ✅ |
+| 4b | Tap by default and the agent gateway ([ADR 0011](docs/adr/0011-tap-by-default.md), [ADR 0012](docs/adr/0012-agent-gateway.md)) | ✅ |
 | 5 | First vertical slice: Salesforce System API → Order Process API → `OrderCreated`, one trace | ⏳ |
 | 6 | SAP, WMS, 3PL System APIs and the Fulfilment Process API | ⏳ |
 | 7 | Experience APIs | ⏳ |
@@ -54,7 +59,8 @@ cost decisions per service.
 
 | Layer | Building blocks | Azure service |
 |---|---|---|
-| Gateway | All APIs exposed through one gateway | API Management (Consumption) |
+| Gateways | People and websites: `apim-intplat-demo`. AI agents: `apim-intplat-agents` (Entra token per agent) | API Management (Consumption), France Central |
+| Tap | Every topic, gateway mutation, agent action, deployment and trace, kept for the Intelligence domain | Event Grid tap subscriptions + Log Analytics export → `sttapintplatdemo` (`rg-intplat-tap`, never deleted) |
 | Experience | Customer Service, Partner (3PL), Webshop | API Management (+ thin Functions) |
 | Process | Order, Fulfilment | Logic Apps (Consumption) |
 | System | Salesforce, SAP, WMS, 3PL | Functions (Flex Consumption, Python) |
@@ -166,9 +172,9 @@ sequenceDiagram
 |---|---|---|
 | [ai-intelligence-domain](https://github.com/azure-intelligence-domain/ai-intelligence-domain) | Architecture | ✅ this repository |
 | [azure-landing-zone](https://github.com/azure-intelligence-domain/azure-landing-zone) | Platform team | ✅ guardrails + OIDC pipeline |
-| [integration-platform](https://github.com/azure-intelligence-domain/integration-platform) | Platform team | ✅ v1.0.0: gateway, events, queues, tracing |
-| [contracts](https://github.com/azure-intelligence-domain/contracts) | Platform team | ✅ v1.1.0: envelope, rules, contract check |
-| [eventcatalog](https://github.com/azure-intelligence-domain/eventcatalog) | Platform team | ✅ [live](https://stcatalogxyxd4f2znqkqy.z50.web.core.windows.net) |
+| [integration-platform](https://github.com/azure-intelligence-domain/integration-platform) | Platform team | ✅ v1.1.0: two gateways, events, queues, tracing, tap |
+| [contracts](https://github.com/azure-intelligence-domain/contracts) | Platform team | ✅ v1.2.0: envelope 1.1.0, rules, contract check |
+| [eventcatalog](https://github.com/azure-intelligence-domain/eventcatalog) | Platform team | ✅ [GitHub Pages](https://azure-intelligence-domain.github.io/eventcatalog/) · [Azure](https://stcatalogxyxd4f2znqkqy.z50.web.core.windows.net) |
 | template-api | Platform team | ⏳ step 5 |
 | backend-systems | Outside world | ⏳ step 5 |
 | system-api-salesforce, -sap, -wms, -3pl | Domain teams | ⏳ steps 5–6 |

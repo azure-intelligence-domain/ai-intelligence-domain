@@ -137,7 +137,7 @@ text(lx + 274, 71, "Planned flow", size=11)
 box(30, 300, 200, 300, "Consumers", fill="#FAF9F8", stroke="#E1DFDD")
 cy = 340
 for label, dashed in [("Webshop", True), ("Customer service", True), ("3PL partner", True),
-                      ("AI agents (MCP)", True), ("Smoke tests", False)]:
+                      ("Smoke tests", False), ("AI agents", True)]:
     chip(46, cy, label, dashed=dashed, w=168)
     cy += 34
 text(130, 540, "Every call carries", size=11, color=MUTED, anchor="middle")
@@ -154,22 +154,25 @@ for repo, dashed in [("azure-landing-zone", False), ("integration-platform", Fal
     x = chip(x, 142, repo, dashed=dashed)
 text(276, 194, "GitHub Actions per repository → reusable contract check (adidas API guidelines: lint, version, no breaking "
      "changes): no contract, no deploy → OIDC login, no stored secrets", size=12, color=MUTED)
-text(276, 214, "Released contracts (asyncapi.yaml / openapi.yaml, topic eventcatalog) → EventCatalog, rebuilt daily",
-     size=12, color=MUTED)
+text(276, 214, "Released contracts (asyncapi.yaml / openapi.yaml, topic eventcatalog) → EventCatalog, rebuilt daily, on GitHub Pages "
+     "and Azure Storage · every deploy → deployment event in the tap", size=12, color=MUTED)
 
 # --- Azure subscription ---------------------------------------------------------------------
 box(260, 258, 1530, 900, "Azure subscription · pay-as-you-go · consumption tiers only · €10/month cap",
     fill="#FFFFFF", stroke=BLUE, stroke_width=1.6, label_color=BLUE, label_size=14, icon="subscription")
 
 # France Central: API Management
-box(280, 296, 300, 330, "France Central", fill="#F3F2F1", stroke="#E1DFDD")
-box(292, 328, 276, 286, "rg-intplat-platform", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
+box(280, 296, 300, 560, "France Central", fill="#F3F2F1", stroke="#E1DFDD")
+box(292, 328, 276, 516, "rg-intplat-platform", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
     badge=("LIVE", LIVE), tag=("costguard=delete", RED))
-service(304, 364, "apim", "API Management", ["Consumption · apim-intplat-demo", "Global policy: Correlation-Id",
-                                            "required, else 400 Problem", "W3C trace on every call"], w=252)
-text(304, 500, "APIs behind the gateway", size=11, weight=600, color=MUTED)
-chip(304, 510, "[Platform] Health API", w=200)
-chip(304, 538, "Experience APIs", dashed=True, w=150)
+service(304, 364, "apim", "Gateway for people", ["apim-intplat-demo · Consumption", "Correlation-Id required",
+                                                "every mutation → tap", "W3C trace on every call"], w=252)
+service(304, 494, "apim", "Gateway for agents", ["apim-intplat-agents · Consumption", "Entra token per agent",
+                                                "every call → tap · 60/min", "MCP server behind it"], w=252)
+text(304, 638, "APIs behind the gateways", size=11, weight=600, color=MUTED)
+chip(304, 648, "[Platform] Health API (both)", w=220)
+chip(304, 676, "Experience APIs", dashed=True, w=150)
+chip(304, 704, "MCP server · commands", dashed=True, w=190)
 
 # Belgium Central
 box(600, 296, 1170, 846, "Belgium Central", fill="#F3F2F1", stroke="#E1DFDD")
@@ -187,8 +190,9 @@ service(1162, 470, "functions", "3PL partner API", ["strict schema: the v2.4", "
 # Platform core (live)
 box(612, 596, 820, 268, "rg-intplat-platform · integration-platform", fill="#EFF6FC", stroke="#A6CDEF",
     icon="resourcegroup", badge=("LIVE", LIVE), tag=("costguard=delete", RED))
-service(628, 634, "eventgrid", "Event Grid topics", ["evgt-intplat-sales · finance", "· supply · logistics",
-                                                   "CloudEvents 1.0 · Entra ID only"], w=250)
+service(628, 634, "eventgrid", "Event Grid topics", ["sales · finance · supply · logistics",
+                                                   "+ platform (actions, deploys)",
+                                                   "CloudEvents · tap on every topic"], w=250)
 service(628, 742, "servicebus", "Service Bus (Basic)", ["sbns-intplat-demo", "queue + DLQ per consumer"], w=250)
 service(1110, 634, "appinsights", "Application Insights", ["appi-intplat-demo", "one trace per journey"], w=306)
 service(1110, 734, "loganalytics", "Log Analytics", ["log-intplat-demo · 30 days", "daily cap 0.15 GB (free tier)"], w=306)
@@ -196,7 +200,7 @@ service(1110, 734, "loganalytics", "Log Analytics", ["log-intplat-demo · 30 day
 # Bottom row: catalog, identities, guardrails
 box(612, 880, 265, 250, "rg-intplat-eventcatalog", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
     badge=("LIVE", LIVE), tag=("costguard=delete", RED))
-service(624, 918, "storage", "EventCatalog", ["Storage static website", "generated from released", "contracts"], w=241)
+service(624, 918, "storage", "EventCatalog", ["generated from released", "contracts · also on", "GitHub Pages"], w=241)
 text(630, 1026, "Domains · services · events ·", size=11, color=MUTED)
 text(630, 1042, "channels · owners · envelope", size=11, color=MUTED)
 
@@ -212,39 +216,48 @@ service(1180, 918, "cost", "Budget €10 / month", ["alerts 50 · 80 · 100 %"],
 service(1180, 1002, "logicapps", "Kill switch", ["at 100 %: deletes costguard", "groups, purges API Mgmt"], w=240)
 
 # Intelligence domain (phase 2)
-box(1450, 328, 308, 802, "Intelligence domain · phase 2", fill="#FFFFFF", stroke=PLANNED, dashed=True,
+box(1450, 328, 308, 528, "Intelligence domain · phase 2", fill="#FFFFFF", stroke=PLANNED, dashed=True,
     badge=("PHASE 2", PLANNED))
-service(1464, 366, "eventhubs", "Ingest · the tap", ["every topic, queue and", "trace mirrored"], dashed=True, w=280)
-service(1464, 470, "cosmos", "Remember · graph", ["how it connects:", "order → flow → API → deploy"], dashed=True, w=280)
-service(1464, 574, "search", "Remember · vectors", ["runbooks, incidents,", "contracts"], dashed=True, w=280)
-service(1464, 678, "foundry", "Reason · Foundry", ["GraphRAG + LLM,", "answers with citations"], dashed=True, w=280)
-service(1464, 782, "apim", "Expose · MCP + API", ["trace_journey(ACME, 4711)", "via API Management"], dashed=True, w=280)
-text(1604, 900, "“Where is ACME's order 4711?”", size=12, weight=600, color=MUTED, anchor="middle", italic=True)
-text(1604, 920, "Paid and stock reserved, but the", size=11, color=MUTED, anchor="middle")
-text(1604, 936, "shipment request never reached", size=11, color=MUTED, anchor="middle")
-text(1604, 952, "the 3PL: since deploy v2.4 of", size=11, color=MUTED, anchor="middle")
-text(1604, 968, "stock-to-3pl, 12 orders are in", size=11, color=MUTED, anchor="middle")
-text(1604, 984, "the dead-letter queue.", size=11, color=MUTED, anchor="middle")
+service(1464, 362, "eventhubs", "Ingest", ["drains the tap"], dashed=True, w=280)
+service(1464, 457, "cosmos", "Remember · graph", ["order → flow → API → deploy"], dashed=True, w=280)
+service(1464, 552, "search", "Remember · vectors", ["runbooks, incidents, contracts"], dashed=True, w=280)
+service(1464, 647, "foundry", "Reason · Foundry", ["GraphRAG + LLM, with citations"], dashed=True, w=280)
+service(1464, 742, "apim", "Expose · MCP + API", ["via the agent gateway"], dashed=True, w=280)
+
+box(1450, 880, 308, 250, "rg-intplat-tap", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
+    badge=("LIVE", LIVE), tag=("never deleted", LIVE))
+service(1462, 918, "storage", "Tap · sttapintplatdemo", ["events queue, no expiry", "telemetry export (am-*)",
+                                                        "every topic + both gateways"], w=284)
+text(1474, 1046, "Subscribe by default: created by", size=11, color=MUTED)
+text(1474, 1062, "the platform, nobody can opt out", size=11, color=MUTED)
 
 # --- Flows -----------------------------------------------------------------------------------
 arrow([(230, 400), (304, 400)], "HTTPS", label_at=(267, 392))
+arrow([(230, 520), (304, 520)], "token", dashed=True, label_at=(267, 512))
 arrow([(556, 400), (628, 400)], "route", dashed=True, label_at=(592, 392))
+arrow([(556, 540), (596, 540), (596, 430), (628, 430)], dashed=True)
+text(590, 486, "commands", size=10, color=PLANNED, anchor="end")
 arrow([(878, 400), (895, 400)], dashed=True)
 text(886, 361, "via gateway", size=10, color=PLANNED, anchor="middle")
 arrow([(1145, 400), (1162, 400)], dashed=True)
 text(1153, 361, "managed identity", size=10, color=PLANNED, anchor="middle")
 arrow([(1020, 434), (1020, 505), (1162, 505)], "call", dashed=True, label_at=(1080, 505))
 arrow([(790, 454), (790, 634)], "publish CloudEvents", dashed=True, label_at=(790, 520))
-arrow([(753, 721), (753, 742)])
+arrow([(753, 737), (753, 742)])
 arrow([(628, 785), (618, 785), (618, 420), (628, 420)], dashed=True)
 text(606, 600, "receive", size=10, color=PLANNED, anchor="middle")
-arrow([(556, 470), (580, 470), (580, 587), (1263, 587), (1263, 634)], "one trace per call (W3C)", label_at=(1060, 587))
+arrow([(568, 700), (628, 700)], "actions", label_at=(598, 692))
+arrow([(556, 460), (580, 460), (580, 587), (1263, 587), (1263, 634)], "one trace per call (W3C)", label_at=(1060, 587))
 arrow([(1263, 701), (1263, 734)])
 arrow([(1300, 991), (1300, 1002)])
-arrow([(1416, 760), (1441, 760), (1441, 400), (1464, 400)], dashed=True)
-text(1441, 300 + 290, "tap", size=10, color=PLANNED, anchor="middle")
+arrow([(878, 720), (1090, 720), (1090, 870), (1441, 870), (1441, 940), (1462, 940)], "tap subscriptions",
+      label_at=(1200, 870))
+arrow([(1416, 790), (1436, 790), (1436, 990), (1462, 990)])
+text(1426, 845, "export", size=10, color=BLUE, anchor="middle")
+arrow([(1604, 880), (1604, 856)], dashed=True)
 arrow([(1022, 232), (1022, 258)], "OIDC: each repository deploys its own resource group",
       label_at=(1180, 248))
+
 svg = (
     f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" '
     'font-family="Segoe UI, -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif">'

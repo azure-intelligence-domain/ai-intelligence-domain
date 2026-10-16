@@ -1,6 +1,6 @@
 # 0007 — Each source system keeps its own state in a database
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-16
 
 ## Context
@@ -26,11 +26,12 @@ one system's data must not be reachable through another system's API.
 - The 3PL is an external partner, so it is simulated as a **partner API** (a
   Function enforcing its strict schema) in front of its own database.
 
-**Database technology: to decide.**
+**Database technology: Cosmos DB serverless** (chosen 2026-10-16), one
+account per source system. Options that were compared:
 
 | Option | Cost at demo volume | Strengths | Weaknesses |
 |---|---|---|---|
-| **Cosmos DB serverless** (recommended) | Cents per month (pay per request, no free grant) | Always instant, JSON documents fit each system's own model, simple Python SDK, Entra data-plane roles. The same service family as the phase 2 graph. | Not relational, no joins. |
+| **Cosmos DB serverless** ✅ chosen | Cents per month (pay per request, no free grant) | Always instant, JSON documents fit each system's own model, simple Python SDK, Entra data-plane roles. The same service family as the phase 2 graph. | Not relational, no joins. |
 | **Azure SQL Database free offer** | €0 (up to 10 free serverless databases per subscription; pauses when the monthly free allowance is used up) | Relational, which feels like a real ERP. Truly free. | Pauses after inactivity: the first call after a pause waits up to about a minute (risky in a live demo). Schema migrations and an ODBC driver needed. |
 
 ```mermaid
@@ -67,3 +68,8 @@ flowchart LR
   `backend-systems` repository includes seed data for the ACME 4711 story.
 - If a real system is connected later (for example a Salesforce Developer
   Edition org), only its System API changes.
+
+- Cosmos DB serverless bills per request and per GB stored, with no free
+  grant. At demo volume that is cents per month, within the €10 cap.
+- Access uses Cosmos DB's built-in data-plane roles for Entra identities; key
+  authentication is disabled on every account.

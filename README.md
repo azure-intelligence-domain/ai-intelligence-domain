@@ -55,7 +55,7 @@ cost decisions per service.
 | Process | Order, Fulfilment | Logic Apps (Consumption) |
 | System | Salesforce, SAP, WMS, 3PL | Functions (Flex Consumption, Python) |
 | Events | Business events between domains | Event Grid → Service Bus Basic queue per subscriber (with DLQ) |
-| Backends | Simulated Salesforce, SAP, WMS and 3PL, each with its own database (ADR 0007, proposed) | Cosmos DB serverless or Azure SQL free + Functions (3PL partner API) |
+| Backends | Simulated Salesforce, SAP, WMS and 3PL, each with its own database (ADR 0007) | Cosmos DB serverless, one account per system + Functions (3PL partner API) |
 | Observability | One trace per journey | Application Insights + Log Analytics |
 | Secrets & identity | No secrets in code | Key Vault, managed identities |
 | Catalog | Domains, services, events, contracts, owners | EventCatalog on Static Web Apps (Free) |

@@ -44,7 +44,7 @@ questions no single system can answer, such as *"Where is ACME's order
 | 4b | Tap by default and the agent gateway ([ADR 0011](docs/adr/0011-tap-by-default.md), [ADR 0012](docs/adr/0012-agent-gateway.md)) | ✅ |
 | 5a | Order domain design: business events (Event Storming), commands and queries, BPMN flows ([process-api-order](https://github.com/azure-intelligence-domain/process-api-order), [ADR 0013](docs/adr/0013-order-domain.md)) | ✅ |
 | 5b | Order domain implementation: Order Process API, Salesforce System API, source system, order topic, tapped queries ([ADR 0014](docs/adr/0014-process-layer-split.md)); journey test: order 4711 end to end, 19 hops in the tap | ✅ |
-| 6 | SAP, WMS, 3PL System APIs and the Fulfilment Process API | ⏳ |
+| 6 | SAP, WMS and 3PL System APIs; one intake flow per receiving domain ([ADR 0015](docs/adr/0015-one-intake-per-domain.md)); event delivery pushed through the gateway ([ADR 0016](docs/adr/0016-event-delivery-through-the-gateway.md)); the order domain's policies. Journey test: an order from placed to completed, by events | ✅ |
 | 7 | Experience APIs | ⏳ |
 | 8 | The v2.4 break: faulty `logistics-intake` mapping, dead letters arrive | ⏳ |
 
@@ -67,7 +67,7 @@ Data models per domain, joined by their business keys: [docs/architecture/data-m
 | Experience | Customer Service, Partner (3PL), Webshop | API Management (+ thin Functions) |
 | Process | Domain process APIs (the brain): Order. Integration flows (the hands): one `<domain>-intake` per receiving domain ([ADR 0014](docs/adr/0014-process-layer-split.md), [0015](docs/adr/0015-one-intake-per-domain.md)) | Functions (Flex Consumption, Python); Logic Apps (Consumption) |
 | System | Salesforce, SAP, WMS, 3PL | Functions (Flex Consumption, Python) |
-| Events | Business events between domains | Event Grid → Service Bus Basic queue per subscriber (with DLQ) |
+| Events | Business events between domains | Event Grid, pushed through the gateway's event intake to each consumer; dead letters into the tap ([ADR 0016](docs/adr/0016-event-delivery-through-the-gateway.md)) |
 | Backends | Simulated Salesforce, SAP, WMS and 3PL, each with its own database (ADR 0007) | Cosmos DB serverless, one account per system + Functions (3PL partner API) |
 | Observability | One trace per journey | Application Insights + Log Analytics |
 | Secrets & identity | No secrets in code | Managed identities; Key Vault with the first real secret ([ADR 0010](docs/adr/0010-platform-core.md)) |
@@ -102,7 +102,7 @@ flowchart TB
 
     subgraph events["Events"]
         eg[["Event Grid topics<br/>CloudEvents 1.0"]]
-        sbq[("Service Bus Basic<br/>queue per subscriber + DLQ")]
+        sbq{{"Event intake<br/>API Management · push per consumer"}}
     end
 
     subgraph system["System layer · Functions Flex Consumption"]
@@ -127,7 +127,8 @@ flowchart TB
 
     consumers --> apim --> experience
     experience --> process
-    proc_order -- "publish facts" --> eg --> sbq -- "own queue per domain" --> flows
+    proc_order -- "publish facts" --> eg --> sbq -- "routing: consumers.yaml" --> flows
+    sbq -- "policies" --> proc_order
     system -- "publish facts" --> eg
     process -- "via API Management" --> system
     sys_sf --> sf
@@ -178,15 +179,14 @@ sequenceDiagram
 |---|---|---|
 | [ai-intelligence-domain](https://github.com/azure-intelligence-domain/ai-intelligence-domain) | Architecture | ✅ this repository |
 | [azure-landing-zone](https://github.com/azure-intelligence-domain/azure-landing-zone) | Platform team | ✅ guardrails + OIDC pipeline |
-| [integration-platform](https://github.com/azure-intelligence-domain/integration-platform) | Platform team | ✅ v1.1.0: two gateways, events, queues, tracing, tap |
+| [integration-platform](https://github.com/azure-intelligence-domain/integration-platform) | Platform team | ✅ v1.3.0: two gateways, events, event intake, routing, tracing, tap |
 | [contracts](https://github.com/azure-intelligence-domain/contracts) | Platform team | ✅ v1.2.0: envelope 1.1.0, rules, contract check |
 | [eventcatalog](https://github.com/azure-intelligence-domain/eventcatalog) | Platform team | ✅ [GitHub Pages](https://azure-intelligence-domain.github.io/eventcatalog/) · [Azure](https://stcatalogxyxd4f2znqkqy.z50.web.core.windows.net) |
-| template-api | Platform team | ⏳ step 5 |
-| [backend-systems](https://github.com/azure-intelligence-domain/backend-systems) | Outside world | ✅ simulated Salesforce (Cosmos DB) |
+| [backend-systems](https://github.com/azure-intelligence-domain/backend-systems) | Outside world | ✅ simulated Salesforce, SAP, WMS, 3PL partner (Cosmos DB) |
 | [system-api-salesforce](https://github.com/azure-intelligence-domain/system-api-salesforce) | Sales team | ✅ v1.0.0 |
-| system-api-sap, -wms, -3pl | Domain teams | ⏳ step 6 |
-| [process-api-order](https://github.com/azure-intelligence-domain/process-api-order) | Order team | ✅ v1.0.0: commands, queries, state machine, business events |
-| process-api-fulfilment | Domain teams | ⏳ step 6 |
+| [system-api-sap](https://github.com/azure-intelligence-domain/system-api-sap), [-wms](https://github.com/azure-intelligence-domain/system-api-wms), [-3pl](https://github.com/azure-intelligence-domain/system-api-3pl) | Finance, supply, logistics teams | ✅ v1.1.0, v1.0.0, v1.0.0 |
+| [finance-intake](https://github.com/azure-intelligence-domain/finance-intake), [supply-intake](https://github.com/azure-intelligence-domain/supply-intake), [logistics-intake](https://github.com/azure-intelligence-domain/logistics-intake) | Finance, supply, logistics teams | ✅ v1.0.0 (Logic Apps) |
+| [process-api-order](https://github.com/azure-intelligence-domain/process-api-order) | Order team | ✅ v1.1.0: commands, queries, state machine, policies, business events |
 | experience-api-customer-service, -partner, -webshop | Channel teams | ⏳ step 7 |
 | intelligence-domain | Intelligence team | ⏳ phase 2 |
 

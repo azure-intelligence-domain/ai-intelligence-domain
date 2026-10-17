@@ -127,7 +127,7 @@ out.append(f'<rect x="{lx}" y="26" width="460" height="56" rx="8" fill="#FAF9F8"
 out.append(f'<rect x="{lx + 14}" y="38" width="34" height="14" rx="3" fill="#FFF" stroke="#C8C6C4"/>')
 text(lx + 56, 50, "Live in Azure", size=11)
 out.append(f'<rect x="{lx + 14}" y="60" width="34" height="14" rx="3" fill="#FFF" stroke="{PLANNED}" stroke-dasharray="4 3"/>')
-text(lx + 56, 72, "Planned (step 5+ / phase 2)", size=11)
+text(lx + 56, 72, "Planned (step 7+ / phase 2)", size=11)
 out.append(f'<line x1="{lx + 230}" y1="45" x2="{lx + 266}" y2="45" stroke="{BLUE}" stroke-width="1.8" marker-end="url(#arrow)"/>')
 text(lx + 274, 49, "Live flow", size=11)
 out.append(f'<line x1="{lx + 230}" y1="67" x2="{lx + 266}" y2="67" stroke="{PLANNED}" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-planned)"/>')
@@ -148,8 +148,8 @@ box(260, 104, 1530, 128, "GitHub · azure-intelligence-domain organisation · on
     fill="#F6F8FA", stroke="#D0D7DE", label_color=INK, label_size=13)
 x = 276
 for repo, dashed in [("azure-landing-zone", False), ("integration-platform", False), ("contracts", False),
-                     ("eventcatalog", False), ("ai-intelligence-domain", False), ("system-api-*", True),
-                     ("process-api-*", True), ("experience-api-*", True), ("backend-systems", True),
+                     ("eventcatalog", False), ("ai-intelligence-domain", False), ("system-api-*", False),
+                     ("process-api-*", False), ("*-intake", False), ("backend-systems", False), ("experience-api-*", True),
                      ("intelligence-domain", True)]:
     x = chip(x, 142, repo, dashed=dashed)
 text(276, 194, "GitHub Actions per repository → reusable contract check (adidas API guidelines: lint, version, no breaking "
@@ -166,34 +166,37 @@ box(280, 296, 300, 560, "France Central", fill="#F3F2F1", stroke="#E1DFDD")
 box(292, 328, 276, 516, "rg-intplat-platform", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
     badge=("LIVE", LIVE), tag=("costguard=delete", RED))
 service(304, 364, "apim", "Gateway for people", ["apim-intplat-demo · Consumption", "Correlation-Id required",
-                                                "every mutation → tap", "W3C trace on every call"], w=252)
+                                                "every query + mutation → tap", "W3C trace on every call"], w=252)
 service(304, 494, "apim", "Gateway for agents", ["apim-intplat-agents · Consumption", "Entra token per agent",
                                                 "every call → tap · 60/min", "MCP server behind it"], w=252)
 text(304, 638, "APIs behind the gateways", size=11, weight=600, color=MUTED)
 chip(304, 648, "[Platform] Health API (both)", w=220)
-chip(304, 676, "Experience APIs", dashed=True, w=150)
-chip(304, 704, "MCP server · commands", dashed=True, w=190)
+chip(304, 676, "Order Process API (both)", w=200)
+chip(304, 704, "System APIs · internal, Entra only", w=250)
+chip(304, 732, "Event Intake API · Event Grid only", w=250)
+chip(304, 760, "Experience APIs", dashed=True, w=150)
+chip(304, 788, "MCP server · commands", dashed=True, w=190)
 
 # Belgium Central
 box(600, 296, 1170, 846, "Belgium Central", fill="#F3F2F1", stroke="#E1DFDD")
 
 # API-led building blocks (planned)
 box(612, 328, 820, 250, "API-led building blocks · one repository, resource group and identity each",
-    fill="#FFFFFF", stroke=PLANNED, dashed=True, icon="resourcegroup", badge=("STEP 5+", PLANNED),
+    fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup", badge=("LIVE", LIVE),
     tag=("costguard=delete", RED))
-service(628, 366, "logicapps", "Process APIs", ["Logic Apps (Consumption)", "Order · Fulfilment"], dashed=True, w=250)
-service(895, 366, "functions", "System APIs", ["Functions (Flex Consumption)", "Salesforce · SAP · WMS · 3PL"],
-        dashed=True, w=250)
-service(1162, 366, "cosmos", "Source systems", ["Cosmos DB serverless,", "one per system"], dashed=True, w=255)
-service(1162, 470, "functions", "3PL partner API", ["strict schema: the v2.4", "break returns 400"], dashed=True, w=255)
+service(628, 366, "functions", "Order Process API", ["Function · the brain", "state machine · policies"], w=250)
+service(628, 460, "logicapps", "Intake flows", ["one Logic App per receiving", "domain: finance · supply · logistics"], w=250)
+service(895, 366, "functions", "System APIs", ["Functions (Flex Consumption)", "Salesforce · SAP · WMS · 3PL"], w=250)
+service(1162, 366, "cosmos", "Source systems", ["Cosmos DB serverless,", "one per system, own naming"], w=255)
+service(1162, 460, "functions", "3PL: strict partner API", ["2.3 only: the v2.4", "mapping gets 400"], w=255)
 
 # Platform core (live)
 box(612, 596, 820, 268, "rg-intplat-platform · integration-platform", fill="#EFF6FC", stroke="#A6CDEF",
     icon="resourcegroup", badge=("LIVE", LIVE), tag=("costguard=delete", RED))
-service(628, 634, "eventgrid", "Event Grid topics", ["sales · finance · supply · logistics",
-                                                   "+ platform (actions, deploys)",
-                                                   "CloudEvents · tap on every topic"], w=250)
-service(628, 742, "servicebus", "Service Bus (Basic)", ["sbns-intplat-demo", "queue + DLQ per consumer"], w=250)
+service(628, 634, "eventgrid", "Event Grid topics", ["sales · finance · supply · logistics · order",
+                                                   "+ platform · tap on every topic",
+                                                   "push to consumers via the intake"], w=250)
+service(628, 742, "servicebus", "Service Bus (Basic)", ["sbns-intplat-demo", "no queues: push wins (ADR 0016)"], w=250)
 service(1110, 634, "appinsights", "Application Insights", ["appi-intplat-demo", "one trace per journey"], w=306)
 service(1110, 734, "loganalytics", "Log Analytics", ["log-intplat-demo · 30 days", "daily cap 0.15 GB (free tier)"], w=306)
 
@@ -227,26 +230,26 @@ service(1464, 742, "apim", "Expose · MCP + API", ["via the agent gateway"], das
 box(1450, 880, 308, 250, "rg-intplat-tap", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
     badge=("LIVE", LIVE), tag=("never deleted", LIVE))
 service(1462, 918, "storage", "Tap · sttapintplatdemo", ["events queue, no expiry", "telemetry export (am-*)",
-                                                        "every topic + both gateways"], w=284)
+                                                        "dead letters of every consumer"], w=284)
 text(1474, 1046, "Subscribe by default: created by", size=11, color=MUTED)
 text(1474, 1062, "the platform, nobody can opt out", size=11, color=MUTED)
 
 # --- Flows -----------------------------------------------------------------------------------
 arrow([(230, 400), (304, 400)], "HTTPS", label_at=(267, 392))
 arrow([(230, 520), (304, 520)], "token", dashed=True, label_at=(267, 512))
-arrow([(556, 400), (628, 400)], "route", dashed=True, label_at=(592, 392))
-arrow([(556, 540), (596, 540), (596, 430), (628, 430)], dashed=True)
-text(590, 486, "commands", size=10, color=PLANNED, anchor="end")
-arrow([(878, 400), (895, 400)], dashed=True)
-text(886, 361, "via gateway", size=10, color=PLANNED, anchor="middle")
-arrow([(1145, 400), (1162, 400)], dashed=True)
-text(1153, 361, "managed identity", size=10, color=PLANNED, anchor="middle")
-arrow([(1020, 434), (1020, 505), (1162, 505)], "call", dashed=True, label_at=(1080, 505))
-arrow([(790, 454), (790, 634)], "publish CloudEvents", dashed=True, label_at=(790, 520))
-arrow([(753, 737), (753, 742)])
-arrow([(628, 785), (618, 785), (618, 420), (628, 420)], dashed=True)
-text(606, 600, "receive", size=10, color=PLANNED, anchor="middle")
-arrow([(568, 700), (628, 700)], "actions", label_at=(598, 692))
+arrow([(556, 400), (628, 400)], "route", label_at=(592, 392))
+arrow([(556, 540), (596, 540), (596, 430), (628, 430)])
+text(590, 486, "commands", size=10, color=MUTED, anchor="end")
+arrow([(878, 400), (895, 400)])
+text(886, 361, "via gateway", size=10, color=MUTED, anchor="middle")
+arrow([(1145, 400), (1162, 400)])
+text(1153, 361, "managed identity", size=10, color=MUTED, anchor="middle")
+arrow([(878, 500), (886, 500), (886, 436), (895, 436)])
+arrow([(1020, 454), (1020, 634), (878, 634)], "publish facts", label_at=(1020, 560))
+arrow([(628, 680), (568, 680)], "push", label_at=(598, 672))
+arrow([(580, 735), (610, 735), (610, 495), (628, 495)])
+text(606, 610, "intake", size=10, color=MUTED, anchor="end")
+arrow([(568, 712), (628, 712)], "actions", label_at=(598, 726))
 arrow([(556, 460), (580, 460), (580, 587), (1263, 587), (1263, 634)], "one trace per call (W3C)", label_at=(1060, 587))
 arrow([(1263, 701), (1263, 734)])
 arrow([(1300, 991), (1300, 1002)])
@@ -268,7 +271,7 @@ svg = (
     f'<rect width="{W}" height="{H}" fill="#FFFFFF"/>'
     + "".join(out)
     + f'<text x="30" y="{H - 12}" font-size="10" fill="{MUTED}">Icons: Microsoft Azure Architecture Icons V24. '
-    'Generated by docs/architecture/solution_design.py · regions verified 2026-10-16.</text>'
+    'Generated by docs/architecture/solution_design.py · regions verified 2026-10-16, step 6 2026-10-17.</text>'
     "</svg>"
 )
 OUT.write_text(svg, encoding="utf-8")

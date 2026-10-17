@@ -9,9 +9,9 @@ one story ("ACME's order 4711: placed, accepted by SAP, stock reserved, stuck at
 |---|---|---|---|
 | Order | process-api-order 1.0.0 | Built | [Order domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/order/1.0.0) |
 | Sales | Salesforce (system of record) | Order simulated | [Sales domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/sales/1.0.0) |
-| Finance | SAP | Designed, step 6 | [Finance domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/finance/1.0.0) |
-| Supply | WMS | Designed, step 6 | [Supply domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/supply/1.0.0) |
-| Logistics | 3PL partner | Designed, step 6 | [Logistics domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/logistics/1.0.0) |
+| Finance | SAP | Built | [Finance domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/finance/1.0.0) |
+| Supply | WMS | Built | [Supply domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/supply/1.0.0) |
+| Logistics | 3PL partner | Built | [Logistics domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/logistics/1.0.0) |
 | Platform | the envelope | Built | [Platform domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/platform/1.0.0) |
 
 The models are defined once in [`data_models.py`](data_models.py), which writes the Mermaid diagrams

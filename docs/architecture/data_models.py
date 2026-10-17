@@ -64,7 +64,7 @@ MODELS = {
         properties=[P("Product2Id", "string", "Product id, e.g. SKU-1042."), P("Name", "string", "Product name."), P("ProductCode", "string", "Code.")]),
   ]},
  "finance": {
-  "built": "Designed; built in step 6 (SAP System API, finance-intake).",
+  "built": "Built (system-api-sap 1.1.0, finance-intake 1.0.0). Kept in the simulated SAP, in SAP's own tables (VBAK, VBRK).",
   "entities": [
    dict(id="SalesOrder", name="Sales Order (SAP)", aggregateRoot=True, identifier="erpOrderNumber",
         summary="The ERP's copy of an order, after credit and availability checks: accepted or refused.",
@@ -81,10 +81,10 @@ MODELS = {
                     P("amount", "Money", "Amount received.", refs="Money"), P("receivedAt", "date-time", "UTC.")]),
   ]},
  "supply": {
-  "built": "Designed; built in step 6 (WMS System API, supply-intake).",
+  "built": "Built (system-api-wms 1.0.0, supply-intake 1.0.0). Kept in the simulated WMS.",
   "entities": [
    dict(id="Warehouse", name="Warehouse", summary="Where stock is kept.",
-        properties=[P("warehouseId", "string", "Warehouse id, e.g. BRU-1."), P("name", "string", "Name."), P("countryCode", "string", "ISO 3166-1 alpha-2.")]),
+        properties=[P("warehouseId", "string", "Warehouse id: BRU-1."), P("name", "string", "Name."), P("countryCode", "string", "ISO 3166-1 alpha-2.")]),
    dict(id="StockItem", name="Stock Item", summary="Stock of one product in one warehouse.",
         properties=[P("productId", "string", "The product.", refs="Product"), P("warehouseId", "string", "The warehouse.", refs="Warehouse"),
                     P("onHand", "integer", "Units in the warehouse."), P("reserved", "integer", "Units reserved for orders.")]),
@@ -92,12 +92,12 @@ MODELS = {
         properties=[P("reservationId", "string", "Reservation id."), P("orderId", "string", "The order. Business key orderid.", refs="Order"),
                     P("warehouseId", "string", "Where it is reserved.", refs="Warehouse"),
                     P("lines", "array", "What is reserved.", many="ReservationLine"),
-                    P("status", "string", "Lifecycle.", enum=["reserved", "released", "picked"]), P("reservedAt", "date-time", "UTC.")]),
+                    P("status", "string", "Lifecycle (released and picked follow later).", enum=["reserved"]), P("reservedAt", "date-time", "UTC.")]),
    dict(id="ReservationLine", name="Reservation Line", summary="One product of a reservation.",
         properties=[P("productId", "string", "The product.", refs="Product"), P("quantity", "integer", "Units reserved.")]),
   ]},
  "logistics": {
-  "built": "Designed; built in step 6 (3PL System API, logistics-intake).",
+  "built": "Built (system-api-3pl 1.0.0, logistics-intake 1.0.0). Kept by the simulated partner speedy-3pl.",
   "entities": [
    dict(id="Partner", name="Partner (3PL)", identifier="partnerId", summary="A third-party logistics partner and the API version it speaks.",
         properties=[P("partnerId", "string", "Partner id. Business key partnerid."), P("name", "string", "Name."),
@@ -108,7 +108,7 @@ MODELS = {
                     P("reservationId", "string", "The stock it ships.", refs="StockReservation"),
                     P("lines", "array", "What is shipped.", many="ShipmentLine"),
                     P("deliveryAddress", "DeliveryAddress", "Where it goes.", refs="DeliveryAddress"),
-                    P("status", "string", "Lifecycle.", enum=["requested", "dispatched", "delivered"]),
+                    P("status", "string", "Lifecycle: the partner picks up at once.", enum=["dispatched", "delivered"]),
                     P("trackingNumber", "string", "The partner's tracking number.", req=False),
                     P("dispatchedAt", "date-time", "UTC.", req=False), P("deliveredAt", "date-time", "UTC.", req=False)]),
    dict(id="ShipmentLine", name="Shipment Line", summary="One product of a shipment.",

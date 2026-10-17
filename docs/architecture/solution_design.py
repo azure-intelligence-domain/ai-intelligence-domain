@@ -127,21 +127,23 @@ out.append(f'<rect x="{lx}" y="26" width="460" height="56" rx="8" fill="#FAF9F8"
 out.append(f'<rect x="{lx + 14}" y="38" width="34" height="14" rx="3" fill="#FFF" stroke="#C8C6C4"/>')
 text(lx + 56, 50, "Live in Azure", size=11)
 out.append(f'<rect x="{lx + 14}" y="60" width="34" height="14" rx="3" fill="#FFF" stroke="{PLANNED}" stroke-dasharray="4 3"/>')
-text(lx + 56, 72, "Planned (step 7+ / phase 2)", size=11)
+text(lx + 56, 72, "Planned (step 8 / phase 2)", size=11)
 out.append(f'<line x1="{lx + 230}" y1="45" x2="{lx + 266}" y2="45" stroke="{BLUE}" stroke-width="1.8" marker-end="url(#arrow)"/>')
 text(lx + 274, 49, "Live flow", size=11)
 out.append(f'<line x1="{lx + 230}" y1="67" x2="{lx + 266}" y2="67" stroke="{PLANNED}" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-planned)"/>')
 text(lx + 274, 71, "Planned flow", size=11)
 
 # --- Consumers -------------------------------------------------------------------------------
-box(30, 300, 200, 300, "Consumers", fill="#FAF9F8", stroke="#E1DFDD")
+box(30, 300, 200, 304, "Consumers · customer portal", fill="#FAF9F8", stroke="#E1DFDD")
 cy = 340
-for label, dashed in [("Webshop", True), ("Customer service", True), ("3PL partner", True),
-                      ("Smoke tests", False), ("AI agents", True)]:
+for label, dashed in [("Webshop", False), ("Customer service", False), ("3PL partner", False),
+                      ("Journey + smoke tests", False), ("AI agents", True)]:
     chip(46, cy, label, dashed=dashed, w=168)
     cy += 34
-text(130, 540, "Every call carries", size=11, color=MUTED, anchor="middle")
-text(130, 556, "Correlation-Id: ord-4711", size=11, weight=600, color=BLUE, anchor="middle")
+text(130, 532, "Staff: Google sign-in,", size=11, color=MUTED, anchor="middle")
+text(130, 548, "thevaluehub.be only", size=11, color=MUTED, anchor="middle")
+text(130, 572, "Every call carries", size=11, color=MUTED, anchor="middle")
+text(130, 588, "Correlation-Id: ord-4711", size=11, weight=600, color=BLUE, anchor="middle")
 
 # --- GitHub (delivery) -----------------------------------------------------------------------
 box(260, 104, 1530, 128, "GitHub · azure-intelligence-domain organisation · one repository per ownership boundary",
@@ -149,8 +151,8 @@ box(260, 104, 1530, 128, "GitHub · azure-intelligence-domain organisation · on
 x = 276
 for repo, dashed in [("azure-landing-zone", False), ("integration-platform", False), ("contracts", False),
                      ("eventcatalog", False), ("ai-intelligence-domain", False), ("system-api-*", False),
-                     ("process-api-*", False), ("*-intake", False), ("backend-systems", False), ("experience-api-*", True),
-                     ("intelligence-domain", True)]:
+                     ("process-api-*", False), ("*-intake", False), ("backend-systems", False), ("experience-api-*", False),
+                     ("customer-portal", False), ("intelligence-domain", True)]:
     x = chip(x, 142, repo, dashed=dashed)
 text(276, 194, "GitHub Actions per repository → reusable contract check (adidas API guidelines: lint, version, no breaking "
      "changes): no contract, no deploy → OIDC login, no stored secrets", size=12, color=MUTED)
@@ -165,16 +167,16 @@ box(260, 258, 1530, 900, "Azure subscription · pay-as-you-go · consumption tie
 box(280, 296, 300, 560, "France Central", fill="#F3F2F1", stroke="#E1DFDD")
 box(292, 328, 276, 516, "rg-intplat-platform", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
     badge=("LIVE", LIVE), tag=("costguard=delete", RED))
-service(304, 364, "apim", "Gateway for people", ["apim-intplat-demo · Consumption", "Correlation-Id required",
-                                                "every query + mutation → tap", "W3C trace on every call"], w=252)
+service(304, 364, "apim", "Gateway for people", ["apim-intplat-demo · Consumption", "Correlation-Id · CORS",
+                                                "staff: Google sign-in", "every call → tap, W3C trace"], w=252)
 service(304, 494, "apim", "Gateway for agents", ["apim-intplat-agents · Consumption", "Entra token per agent",
                                                 "every call → tap · 60/min", "MCP server behind it"], w=252)
 text(304, 638, "APIs behind the gateways", size=11, weight=600, color=MUTED)
-chip(304, 648, "[Platform] Health API (both)", w=220)
-chip(304, 676, "Order Process API (both)", w=200)
-chip(304, 704, "System APIs · internal, Entra only", w=250)
-chip(304, 732, "Event Intake API · Event Grid only", w=250)
-chip(304, 760, "Experience APIs", dashed=True, w=150)
+chip(304, 648, "Experience APIs · staff (Google)", w=250)
+chip(304, 676, "Process + System APIs · internal", w=250)
+chip(304, 704, "Event Intake API · Event Grid only", w=250)
+chip(304, 732, "Agents: Order, Customer Service", w=250)
+chip(304, 760, "[Platform] Health API (both)", w=220)
 chip(304, 788, "MCP server · commands", dashed=True, w=190)
 
 # Belgium Central
@@ -184,11 +186,19 @@ box(600, 296, 1170, 846, "Belgium Central", fill="#F3F2F1", stroke="#E1DFDD")
 box(612, 328, 820, 250, "API-led building blocks · one repository, resource group and identity each",
     fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup", badge=("LIVE", LIVE),
     tag=("costguard=delete", RED))
-service(628, 366, "functions", "Order Process API", ["Function · the brain", "state machine · policies"], w=250)
-service(628, 460, "logicapps", "Intake flows", ["one Logic App per receiving", "domain: finance · supply · logistics"], w=250)
+service(628, 366, "functions", "Experience APIs", ["Webshop, Customer Service: Functions", "in France Central · Partner: gateway"], w=250)
+service(628, 460, "functions", "Order Process API", ["Function · the brain", "state machine · policies"], w=250)
+service(895, 460, "logicapps", "Intake flows", ["one Logic App per receiving", "domain: undo on OrderCancelled"], w=250)
 service(895, 366, "functions", "System APIs", ["Functions (Flex Consumption)", "Salesforce · SAP · WMS · 3PL"], w=250)
 service(1162, 366, "cosmos", "Source systems", ["Cosmos DB serverless,", "one per system, own naming"], w=255)
-service(1162, 460, "functions", "3PL: strict partner API", ["2.3 only: the v2.4", "mapping gets 400"], w=255)
+service(1162, 460, "functions", "3PL: strict partner API", ["booked, then picked up · 2.3", "only: the v2.4 mapping gets 400"], w=255)
+
+# The customer portal (Belgium Central too, drawn under France Central for room)
+box(280, 872, 300, 270, "Belgium Central · the front end", fill="#F3F2F1", stroke="#E1DFDD")
+box(292, 904, 276, 226, "rg-intplat-customer-portal", fill="#EFF6FC", stroke="#A6CDEF", icon="resourcegroup",
+    badge=("LIVE", LIVE), tag=("costguard=delete", RED))
+service(304, 940, "storage", "Customer portal", ["Vue.js · Storage static website", "also on GitHub Pages",
+                                                  "calls the gateway (CORS)"], w=252)
 
 # Platform core (live)
 box(612, 596, 820, 268, "rg-intplat-platform · integration-platform", fill="#EFF6FC", stroke="#A6CDEF",
@@ -238,14 +248,18 @@ text(1474, 1062, "the platform, nobody can opt out", size=11, color=MUTED)
 arrow([(230, 400), (304, 400)], "HTTPS", label_at=(267, 392))
 arrow([(230, 520), (304, 520)], "token", dashed=True, label_at=(267, 512))
 arrow([(556, 400), (628, 400)], "route", label_at=(592, 392))
-arrow([(556, 540), (596, 540), (596, 430), (628, 430)])
+arrow([(556, 540), (596, 540), (596, 515), (628, 515)])
 text(590, 486, "commands", size=10, color=MUTED, anchor="end")
 arrow([(878, 400), (895, 400)])
 text(886, 361, "via gateway", size=10, color=MUTED, anchor="middle")
 arrow([(1145, 400), (1162, 400)])
 text(1153, 361, "managed identity", size=10, color=MUTED, anchor="middle")
-arrow([(878, 500), (886, 500), (886, 436), (895, 436)])
-arrow([(1020, 454), (1020, 634), (878, 634)], "publish facts", label_at=(1020, 560))
+arrow([(753, 454), (753, 460)])
+arrow([(878, 490), (895, 490)])
+arrow([(1020, 460), (1020, 454)])
+arrow([(1145, 430), (1153, 430), (1153, 626), (820, 626), (820, 634)], "publish facts", label_at=(1075, 626))
+arrow([(130, 604), (130, 1000), (304, 1000)], "staff", label_at=(130, 760))
+arrow([(304, 1026), (271, 1026), (271, 450), (304, 450)])
 arrow([(628, 680), (568, 680)], "push", label_at=(598, 672))
 arrow([(580, 735), (610, 735), (610, 495), (628, 495)])
 text(606, 610, "intake", size=10, color=MUTED, anchor="end")
@@ -271,7 +285,7 @@ svg = (
     f'<rect width="{W}" height="{H}" fill="#FFFFFF"/>'
     + "".join(out)
     + f'<text x="30" y="{H - 12}" font-size="10" fill="{MUTED}">Icons: Microsoft Azure Architecture Icons V24. '
-    'Generated by docs/architecture/solution_design.py · regions verified 2026-10-16, step 6 2026-10-17.</text>'
+    'Generated by docs/architecture/solution_design.py · regions verified 2026-10-16, step 7 2026-10-17.</text>'
     "</svg>"
 )
 OUT.write_text(svg, encoding="utf-8")

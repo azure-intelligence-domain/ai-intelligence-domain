@@ -7,12 +7,13 @@ one story ("ACME's order 4711: placed, accepted by SAP, stock reserved, stuck at
 
 | Domain | Kept in | Status | Catalog |
 |---|---|---|---|
-| Order | process-api-order 1.0.0 | Built | [Order domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/order/1.0.0) |
-| Sales | Salesforce (system of record) | Order simulated | [Sales domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/sales/1.0.0) |
+| Order | process-api-order 1.2.0 (references, timeline) | Built | [Order domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/order/1.0.0) |
+| Sales | Salesforce (system of record) | Order, Account, Product simulated | [Sales domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/sales/1.0.0) |
 | Finance | SAP | Built | [Finance domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/finance/1.0.0) |
 | Supply | WMS | Built | [Supply domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/supply/1.0.0) |
 | Logistics | 3PL partner | Built | [Logistics domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/logistics/1.0.0) |
-| Platform | the envelope | Built | [Platform domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/platform/1.0.0) |
+| Platform | the envelope | Built |
+| Channel | none: the Experience APIs show the other domains' data | Built (ADR 0017) | [Channel domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/channel/1.0.0) | [Platform domain](https://azure-intelligence-domain.github.io/eventcatalog/docs/domains/platform/1.0.0) |
 
 The models are defined once in [`data_models.py`](data_models.py), which writes the Mermaid diagrams
 below and the entities of EventCatalog:
@@ -37,8 +38,25 @@ erDiagram
         date requestedDeliveryDate
         string holdReason
         string cancellationReason
+        OrderReferences references
+        list timeline
         datetime createdAt
         datetime updatedAt
+    }
+    OrderReferences {
+        string erpOrderNumber FK
+        string invoiceNumber FK
+        string creditNoteNumber FK
+        string reservationId FK
+        string warehouseId
+        string shipmentId FK
+        string trackingNumber
+        string partnerId
+    }
+    OrderMilestone {
+        string fact
+        string domain
+        datetime occurredAt
     }
     OrderLine {
         integer lineNumber
@@ -57,9 +75,11 @@ erDiagram
         string currency
     }
     Account {
-        string AccountId PK
+        string AccountNumber
         string Name
-        string BillingCountryCode
+        string Industry
+        string ShippingCity
+        string CurrencyIsoCode
     }
     Opportunity {
         string OpportunityId
@@ -83,6 +103,8 @@ erDiagram
         string ShippingStreet
         date Requested_Delivery_Date__c
         string Idempotency_Key__c
+        string ERP_Order_Number__c
+        list Order_Milestones__r
         datetime CreatedDate
         datetime LastModifiedDate
     }
@@ -93,9 +115,11 @@ erDiagram
         number UnitPrice
     }
     Product {
-        string Product2Id
-        string Name
         string ProductCode
+        string Name
+        string Family
+        number StandardPrice
+        boolean IsActive
     }
     SalesOrder {
         string erpOrderNumber PK
@@ -104,6 +128,8 @@ erDiagram
         string status
         string refusalReason
         Money netValue
+        datetime cancelledAt
+        string cancellationReason
     }
     Invoice {
         string invoiceNumber PK
@@ -112,6 +138,13 @@ erDiagram
         datetime issuedAt
         date dueDate
         string status
+        string creditNoteNumber FK
+    }
+    CreditNote {
+        string creditNoteNumber PK
+        string invoiceNumber FK
+        Money amount
+        datetime issuedAt
     }
     Payment {
         string paymentId
@@ -135,8 +168,9 @@ erDiagram
         string orderId FK
         string warehouseId FK
         list lines
-        string status
+        string lifecycleStatus
         datetime reservedAt
+        datetime releasedAt
     }
     ReservationLine {
         string productId FK
@@ -156,8 +190,10 @@ erDiagram
         DeliveryAddress deliveryAddress
         string status
         string trackingNumber
+        datetime bookedAt
         datetime dispatchedAt
         datetime deliveredAt
+        datetime cancelledAt
     }
     ShipmentLine {
         string productId FK
@@ -179,6 +215,13 @@ erDiagram
     Order ||--|{ OrderLine : "orderLines"
     Order ||--|| Money : "totalAmount"
     Order ||--|| DeliveryAddress : "deliveryAddress"
+    Order }o--o| OrderReferences : "references"
+    Order ||--|{ OrderMilestone : "timeline"
+    OrderReferences }o--o| SalesOrder : "erpOrderNumber"
+    OrderReferences }o--o| Invoice : "invoiceNumber"
+    OrderReferences }o--o| CreditNote : "creditNoteNumber"
+    OrderReferences }o--o| StockReservation : "reservationId"
+    OrderReferences }o--o| Shipment : "shipmentId"
     OrderLine }o--|| Product : "productId"
     OrderLine ||--|| Money : "unitPrice"
     Opportunity }o--|| Account : "AccountId"
@@ -191,6 +234,9 @@ erDiagram
     SalesOrder ||--|| Money : "netValue"
     Invoice }o--|| SalesOrder : "erpOrderNumber"
     Invoice ||--|| Money : "amount"
+    Invoice }o--o| CreditNote : "creditNoteNumber"
+    CreditNote }o--|| Invoice : "invoiceNumber"
+    CreditNote ||--|| Money : "amount"
     Payment }o--|| Invoice : "invoiceNumber"
     Payment ||--|| Money : "amount"
     StockItem }o--|| Product : "productId"
@@ -226,8 +272,25 @@ erDiagram
         date requestedDeliveryDate
         string holdReason
         string cancellationReason
+        OrderReferences references
+        list timeline
         datetime createdAt
         datetime updatedAt
+    }
+    OrderReferences {
+        string erpOrderNumber FK
+        string invoiceNumber FK
+        string creditNoteNumber FK
+        string reservationId FK
+        string warehouseId
+        string shipmentId FK
+        string trackingNumber
+        string partnerId
+    }
+    OrderMilestone {
+        string fact
+        string domain
+        datetime occurredAt
     }
     OrderLine {
         integer lineNumber
@@ -248,13 +311,35 @@ erDiagram
     Account {
         string see_sales_domain
     }
+    CreditNote {
+        string see_finance_domain
+    }
+    Invoice {
+        string see_finance_domain
+    }
     Product {
         string see_sales_domain
+    }
+    SalesOrder {
+        string see_finance_domain
+    }
+    Shipment {
+        string see_logistics_domain
+    }
+    StockReservation {
+        string see_supply_domain
     }
     Order }o--|| Account : "customerId"
     Order ||--|{ OrderLine : "orderLines"
     Order ||--|| Money : "totalAmount"
     Order ||--|| DeliveryAddress : "deliveryAddress"
+    Order }o--o| OrderReferences : "references"
+    Order ||--|{ OrderMilestone : "timeline"
+    OrderReferences }o--o| SalesOrder : "erpOrderNumber"
+    OrderReferences }o--o| Invoice : "invoiceNumber"
+    OrderReferences }o--o| CreditNote : "creditNoteNumber"
+    OrderReferences }o--o| StockReservation : "reservationId"
+    OrderReferences }o--o| Shipment : "shipmentId"
     OrderLine }o--|| Product : "productId"
     OrderLine ||--|| Money : "unitPrice"
 ```
@@ -264,9 +349,11 @@ erDiagram
 ```mermaid
 erDiagram
     Account {
-        string AccountId PK
+        string AccountNumber
         string Name
-        string BillingCountryCode
+        string Industry
+        string ShippingCity
+        string CurrencyIsoCode
     }
     Opportunity {
         string OpportunityId
@@ -290,6 +377,8 @@ erDiagram
         string ShippingStreet
         date Requested_Delivery_Date__c
         string Idempotency_Key__c
+        string ERP_Order_Number__c
+        list Order_Milestones__r
         datetime CreatedDate
         datetime LastModifiedDate
     }
@@ -300,9 +389,11 @@ erDiagram
         number UnitPrice
     }
     Product {
-        string Product2Id
-        string Name
         string ProductCode
+        string Name
+        string Family
+        number StandardPrice
+        boolean IsActive
     }
     Opportunity }o--|| Account : "AccountId"
     SalesforceOrder }o--|| Account : "AccountId"
@@ -322,6 +413,8 @@ erDiagram
         string status
         string refusalReason
         Money netValue
+        datetime cancelledAt
+        string cancellationReason
     }
     Invoice {
         string invoiceNumber PK
@@ -330,6 +423,13 @@ erDiagram
         datetime issuedAt
         date dueDate
         string status
+        string creditNoteNumber FK
+    }
+    CreditNote {
+        string creditNoteNumber PK
+        string invoiceNumber FK
+        Money amount
+        datetime issuedAt
     }
     Payment {
         string paymentId
@@ -346,6 +446,8 @@ erDiagram
     SalesOrder }o--|| Order : "orderId"
     SalesOrder }o--|| Account : "customerId"
     Invoice }o--|| SalesOrder : "erpOrderNumber"
+    Invoice }o--o| CreditNote : "creditNoteNumber"
+    CreditNote }o--|| Invoice : "invoiceNumber"
     Payment }o--|| Invoice : "invoiceNumber"
 ```
 
@@ -369,8 +471,9 @@ erDiagram
         string orderId FK
         string warehouseId FK
         list lines
-        string status
+        string lifecycleStatus
         datetime reservedAt
+        datetime releasedAt
     }
     ReservationLine {
         string productId FK
@@ -408,8 +511,10 @@ erDiagram
         DeliveryAddress deliveryAddress
         string status
         string trackingNumber
+        datetime bookedAt
         datetime dispatchedAt
         datetime deliveredAt
+        datetime cancelledAt
     }
     ShipmentLine {
         string productId FK

@@ -46,7 +46,7 @@ questions no single system can answer, such as *"Where is ACME's order
 | 5b | Order domain implementation: Order Process API, Salesforce System API, source system, order topic, tapped queries ([ADR 0014](docs/adr/0014-process-layer-split.md)); journey test: order 4711 end to end, 19 hops in the tap | ✅ |
 | 6 | SAP, WMS and 3PL System APIs; one intake flow per receiving domain ([ADR 0015](docs/adr/0015-one-intake-per-domain.md)); event delivery pushed through the gateway ([ADR 0016](docs/adr/0016-event-delivery-through-the-gateway.md)); the order domain's policies. Journey test: an order from placed to completed, by events | ✅ |
 | 7 | Experience APIs (webshop, customer service, partner) and the Vue.js [customer portal](https://azure-intelligence-domain.github.io/customer-portal/) with Google staff sign-in ([ADR 0017](docs/adr/0017-experience-layer-and-staff-sign-in.md)); cancellations reach every domain, shipments are booked first ([ADR 0018](docs/adr/0018-cancellation-reaches-every-domain.md)). Journey test: shop, ship, deliver, pay; cancel while waiting for the truck | ✅ |
-| 8 | The v2.4 break: faulty `logistics-intake` mapping, dead letters arrive | ⏳ |
+| 8 | The v2.4 break: faulty `logistics-intake` mapping, dead letters arrive | ⏸ postponed; how we handle this flow is decided later |
 
 ## Phase 2 — Intelligence domain
 

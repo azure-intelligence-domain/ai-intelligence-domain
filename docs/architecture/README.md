@@ -7,6 +7,8 @@
 | [`solution-design.svg`](solution-design.svg) | The diagram, sharp at any size (rendered on GitHub). |
 | [`solution-design.png`](solution-design.png) | The same at 2× resolution, for slides. |
 | [`solution_design.py`](solution_design.py) | Generates the SVG. Update it in the same change as the architecture. |
+| [`c4.md`](c4.md) | The C4 model: system context, containers (calls; events and the tap), components (Order Process API, people gateway), deployment. Mermaid; update it in the same change as the architecture. |
+| [`data-models.md`](data-models.md) | The data model of every domain. |
 
 Solid boxes and arrows are live in Azure; dashed ones are planned (step 5 and later, or
 phase 2). Red tags mark the resource groups the kill switch deletes at 100 % of the budget.

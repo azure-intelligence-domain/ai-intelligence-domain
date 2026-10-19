@@ -58,6 +58,7 @@ cost decisions per service.
 [![Solution design](docs/architecture/solution-design.svg)](docs/architecture/)
 
 Data models per domain, joined by their business keys: [docs/architecture/data-models.md](docs/architecture/data-models.md).
+The C4 model (system context, containers, components, deployment): [docs/architecture/c4.md](docs/architecture/c4.md).
 
 
 | Layer | Building blocks | Azure service |
